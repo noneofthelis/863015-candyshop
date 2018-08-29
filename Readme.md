@@ -1,7 +1,7 @@
 # Личный проект «Кэндишоп» [![Build status][travis-image]][travis-url]
 
 * Студент: [Alisa Ianovskaia](https://up.htmlacademy.ru/javascript/15/user/863015).
-* Наставник: `Неизвестно`.
+* Наставник: `Игорь Шевченко`.
 
 ---
 

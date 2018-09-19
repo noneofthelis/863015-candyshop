@@ -1,11 +1,96 @@
 'use strict';
 
-var NAMES = ['Чесночные сливки', 'Огуречный педант', 'Молочная хрюша', 'Грибной шейк', 'Баклажановое безумие', 'Паприколу итальяно', 'Нинзя-удар васаби', 'Хитрый баклажан', 'Горчичный вызов', 'Кедровая липучка', 'Корманный портвейн', 'Чилийский задира', 'Беконовый взрыв', 'Арахис vs виноград', 'Сельдерейная душа', 'Початок в бутылке', 'Чернющий мистер чеснок', 'Раша федераша', 'Кислая мина', 'Кукурузное утро', 'Икорный фуршет', 'Новогоднее настроение', 'С пивком потянет', 'Мисс креветка', 'Бесконечный взрыв', 'Невинные винные', 'Бельгийское пенное', 'Острый язычок'];
-var IMAGES_NAMES = ['gum-cedar', 'gum-chile', 'gum-eggplant', 'gum-mustard', 'gum-portwine', 'gum-wasabi', 'ice-cucumber', 'ice-eggplant', 'ice-garlic', 'ice-italian', 'ice-mushroom', 'ice-pig', 'marmalade-beer', 'marmalade-caviar', 'marmalade-corn', 'marmalade-new-year', 'marmalade-sour', 'marshmallow-bacon', 'marshmallow-beer', 'marshmallow-shrimp', 'marshmallow-spicy', 'marshmallow-wine', 'soda-bacon', 'soda-celery', 'soda-cob', 'soda-garlic', 'soda-peanut-grapes', 'soda-russian'];
-var INGRIDIENTS_LIST = ['молоко', 'сливки', 'вода', 'пищевой краситель', 'патока', 'ароматизатор бекона', 'ароматизатор свинца', 'ароматизатор дуба, идентичный натуральному', 'ароматизатор картофеля', 'лимонная кислота', 'загуститель', 'эмульгатор', 'консервант: сорбат калия', 'посолочная смесь: соль, нитрит натрия', 'ксилит', 'карбамид', 'вилларибо', 'виллабаджо'];
+var NAMES = [
+  'Чесночные сливки',
+  'Огуречный педант',
+  'Молочная хрюша',
+  'Грибной шейк',
+  'Баклажановое безумие',
+  'Паприколу итальяно',
+  'Нинзя-удар васаби',
+  'Хитрый баклажан',
+  'Горчичный вызов',
+  'Кедровая липучка',
+  'Корманный портвейн',
+  'Чилийский задира',
+  'Беконовый взрыв',
+  'Арахис vs виноград',
+  'Сельдерейная душа',
+  'Початок в бутылке',
+  'Чернющий мистер чеснок',
+  'Раша федераша',
+  'Кислая мина',
+  'Кукурузное утро',
+  'Икорный фуршет',
+  'Новогоднее настроение',
+  'С пивком потянет',
+  'Мисс креветка',
+  'Бесконечный взрыв',
+  'Невинные винные',
+  'Бельгийское пенное',
+  'Острый язычок'
+];
+var IMAGES_NAMES = [
+  'gum-cedar',
+  'gum-chile',
+  'gum-eggplant',
+  'gum-mustard',
+  'gum-portwine',
+  'gum-wasabi',
+  'ice-cucumber',
+  'ice-eggplant',
+  'ice-garlic',
+  'ice-italian',
+  'ice-mushroom',
+  'ice-pig',
+  'marmalade-beer',
+  'marmalade-caviar',
+  'marmalade-corn',
+  'marmalade-new-year',
+  'marmalade-sour',
+  'marshmallow-bacon',
+  'marshmallow-beer',
+  'marshmallow-shrimp',
+  'marshmallow-spicy',
+  'marshmallow-wine',
+  'soda-bacon',
+  'soda-celery',
+  'soda-cob',
+  'soda-garlic',
+  'soda-peanut-grapes',
+  'soda-russian'
+];
+var INGRIDIENTS_LIST = [
+  'молоко',
+  'сливки',
+  'вода',
+  'пищевой краситель',
+  'патока',
+  'ароматизатор бекона',
+  'ароматизатор свинца',
+  'ароматизатор дуба, идентичный натуральному',
+  'ароматизатор картофеля',
+  'лимонная кислота',
+  'загуститель',
+  'эмульгатор',
+  'консервант: сорбат калия',
+  'посолочная смесь: соль, нитрит натрия',
+  'ксилит',
+  'карбамид',
+  'вилларибо',
+  'виллабаджо'
+];
+var NUMBERS_IN_WRITTEN = [
+  'one',
+  'two',
+  'three',
+  'four',
+  'five'
+];
 var PATH = 'img/cards/';
 var FILE_EXTENSION = '.jpg';
-var NUMBERS_IN_WRITTEN = ['one', 'two', 'three', 'four', 'five'];
+var RATING_CLASS_PREFIX = 'stars__rating--';
+
 
 var AMOUNT_MIN = 0;
 var AMOUNT_MAX = 20;
@@ -24,26 +109,30 @@ var TOTAL_ITEMS = 26;
 var ITEMS_IN_CART = 3;
 var DEFAULT_AMOUNT_IN_CART = 1;
 
-var catalogBlock = document.querySelector('.catalog__cards');
-catalogBlock.classList.remove('catalog__cards--load');
-catalogBlock.querySelector('.catalog__load').classList.add('visually-hidden');
-
-var cartBlock = document.querySelector('.goods__cards');
-cartBlock.classList.remove('goods__cards--empty');
-cartBlock.querySelector('.goods__card-empty').style.display = 'none';
-
+//
+hideCatalogLoadStatus();
+hideEmptyCartStatus();
 appendElements(generateObjects(TOTAL_ITEMS));
+
+function hideCatalogLoadStatus() {
+  var catalogBlock = document.querySelector('.catalog__cards');
+  catalogBlock.classList.remove('catalog__cards--load');
+  catalogBlock.querySelector('.catalog__load').classList.add('visually-hidden');
+}
+
+function hideEmptyCartStatus() {
+  var cartBlock = document.querySelector('.goods__cards');
+  cartBlock.classList.remove('goods__cards--empty');
+  cartBlock.querySelector('.goods__card-empty').style.display = 'none';
+}
 
 function appendElements(objects) {
   var catalogItemTemplate = document.querySelector('#card').content.querySelector('.catalog__card');
   var cartItemTemplate = document.querySelector('#card-order').content.querySelector('.goods_card');
-
-  var catalogItems = createItems(objects, catalogItemTemplate);
-  document.querySelector('.catalog__cards').appendChild(catalogItems);
-
   var cartObjects = chooseRandomObjects(objects, ITEMS_IN_CART);
-  var cartItems = createCartElements(cartObjects, cartItemTemplate);
-  document.querySelector('.goods__cards').appendChild(cartItems);
+
+  document.querySelector('.catalog__cards').appendChild(createItems(objects, catalogItemTemplate));
+  document.querySelector('.goods__cards').appendChild(createCartElements(cartObjects, cartItemTemplate));
 }
 
 function createCartElements(objects, template) {
@@ -71,11 +160,7 @@ function createItems(objects, template) {
 
     if (object.amount <= 5) {
       element.classList.remove('card--in-stock');
-      if (object.amount === 0) {
-        element.classList.add('card--soon');
-      } else {
-        element.classList.add('card--little');
-      }
+      element.classList.add(object.amount === 0 ? 'card--soon' : 'card--little');
     }
 
     var price = element.querySelector('.card__price');
@@ -96,9 +181,8 @@ function createItems(objects, template) {
 }
 
 function setRatingClass(object) {
-  var classPrefix = 'stars__rating--';
   var rating = object.rating.value;
-  return classPrefix + NUMBERS_IN_WRITTEN[rating];
+  return RATING_CLASS_PREFIX + NUMBERS_IN_WRITTEN[rating];
 }
 
 function setNutritionalValue(object) {

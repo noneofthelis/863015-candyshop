@@ -111,7 +111,7 @@ var DEFAULT_AMOUNT_IN_CART = 1;
 
 //
 hideCatalogLoadStatus();
-hideEmptyCartStatus();
+//hideEmptyCartStatus();
 appendElements(generateObjects(TOTAL_ITEMS));
 
 function hideCatalogLoadStatus() {
@@ -132,7 +132,7 @@ function appendElements(objects) {
   var cartObjects = chooseRandomObjects(objects, ITEMS_IN_CART);
 
   document.querySelector('.catalog__cards').appendChild(createItems(objects, catalogItemTemplate));
-  document.querySelector('.goods__cards').appendChild(createCartElements(cartObjects, cartItemTemplate));
+  //document.querySelector('.goods__cards').appendChild(createCartElements(cartObjects, cartItemTemplate));
 }
 
 function createCartElements(objects, template) {
@@ -242,4 +242,41 @@ function getRandomNumber(min, max) {
 
 function getRandomElement(array) {
   return array[Math.floor(Math.random() * array.length)];
+}
+
+// #15
+
+document.querySelector('.deliver').addEventListener('click', onInputClick);
+document.querySelector('.payment__inner').addEventListener('click', onInputClick); // а норм ли
+
+function onInputClick(evt) {
+  if (evt.target.classList.contains('toggle-btn__input')) {
+    switchTabs(evt);
+  }
+}
+
+function switchTabs(evt) { // пункт 9.1 ТЗ
+  var identifier = '.' + evt.target.id;
+  if (evt.currentTarget.classList.contains('payment__inner')) {
+    identifier += '-wrap';
+  }
+  var element = evt.currentTarget.querySelector(identifier);
+  var elementSibling = element.nextElementSibling;
+  if (elementSibling === null) {
+    elementSibling = element.previousElementSibling;
+  }
+  element.classList.remove('visually-hidden');
+  elementSibling.classList.add('visually-hidden');
+  setInputsDisability(element, elementSibling);
+}
+
+function setInputsDisability(element, hiddenElement) { // пункт 9.2 ТЗ
+  var elements = element.querySelectorAll('input');
+  for (var i = 0; i < elements.length; i++) {
+    elements[i].disabled = false;
+  }
+  var hiddenElements = hiddenElement.querySelectorAll('input');
+  for (var j = 0; j < hiddenElements.length; j++) {
+    hiddenElements[j].disabled = true;
+  }
 }

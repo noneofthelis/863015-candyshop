@@ -109,6 +109,8 @@ var TOTAL_ITEMS = 26;
 var ITEMS_IN_CART = 3;
 var DEFAULT_AMOUNT_IN_CART = 1;
 
+var ENTER_KEYCODE = 27;
+
 //
 hideCatalogLoadStatus();
 //hideEmptyCartStatus();
@@ -246,6 +248,7 @@ function getRandomElement(array) {
 
 // #15
 
+// 3.
 document.querySelector('.deliver').addEventListener('click', onInputClick);
 document.querySelector('.payment__inner').addEventListener('click', onInputClick); // а норм ли
 
@@ -280,3 +283,26 @@ function setInputsDisability(element, hiddenElement) { // пункт 9.2 ТЗ
     hiddenElements[j].disabled = true;
   }
 }
+
+// 1.
+
+document.querySelector('.card__btn-favorite').addEventListener('click', onFavouriteButtonClick);
+document.querySelector('.card__btn-favorite').addEventListener('keydown', onFavouriteButtonPress);
+
+function onFavouriteButtonClick(evt) {
+  toggleFavouriteClass(evt);
+  evt.target.blur();
+}
+
+function onFavouriteButtonPress(evt) {
+  if (evt.keyCode === ENTER_KEYCODE) {
+    toggleFavouriteClass(evt);
+  }
+}
+
+function toggleFavouriteClass(evt) {
+  evt.preventDefault();
+  evt.target.classList.toggle('card__btn-favorite--selected');
+}
+
+

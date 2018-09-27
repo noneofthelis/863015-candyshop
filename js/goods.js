@@ -286,16 +286,18 @@ function setInputsDisability(element, hiddenElement) { // пункт 9.2 ТЗ
 
 // 1.
 
-document.querySelector('.card__btn-favorite').addEventListener('click', onFavouriteButtonClick);
-document.querySelector('.card__btn-favorite').addEventListener('keydown', onFavouriteButtonPress);
+document.querySelector('.catalog__cards').addEventListener('click', onFavouriteButtonClick);
+document.querySelector('.catalog__cards').addEventListener('keydown', onFavouriteButtonPress);
 
 function onFavouriteButtonClick(evt) {
-  toggleFavouriteClass(evt);
-  evt.target.blur();
+  if (evt.target.classList.contains('card__btn-favorite')) {
+    toggleFavouriteClass(evt);
+    evt.target.blur();
+  }
 }
 
 function onFavouriteButtonPress(evt) {
-  if (evt.keyCode === ENTER_KEYCODE) {
+  if (evt.target.classList.contains('card__btn-favorite') && evt.keyCode === ENTER_KEYCODE) {
     toggleFavouriteClass(evt);
   }
 }

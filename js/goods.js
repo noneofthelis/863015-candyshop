@@ -110,6 +110,8 @@ var ITEMS_IN_CART = 3;
 var DEFAULT_AMOUNT_IN_CART = 1;
 
 var ENTER_KEYCODE = 27;
+var RANGE_FILTER_MIN = 0;
+var RANGE_FILTER_MAX = 100;
 
 //
 hideCatalogLoadStatus();
@@ -307,4 +309,27 @@ function toggleFavouriteClass(evt) {
   evt.target.classList.toggle('card__btn-favorite--selected');
 }
 
+// 4.
 
+document.querySelector('.catalog__filter.range').addEventListener('mouseup', onRangeFilterMouseUp);
+
+function onRangeFilterMouseUp(evt) {
+  if (evt.target.tagName === 'BUTTON') {
+    setRangePrice(evt.target);
+  }
+}
+
+function setRangePrice(element) {
+  var rangePriceParent = element.parentElement.nextElementSibling;
+  var rangePrice = rangePriceParent.firstElementChild;
+  var shift = 0;
+  if (element !== element.parentElement.firstElementChild) {
+    rangePrice = rangePriceParent.lastElementChild;
+    shift = element.clientWidth;
+  }
+  rangePrice.textContent = (RANGE_FILTER_MAX - RANGE_FILTER_MIN) * calculatePercent(element, shift);
+}
+
+function calculatePercent(element, shift) {
+  return ((element.offsetLeft + shift) / element.parentElement.clientWidth).toFixed(2);
+}

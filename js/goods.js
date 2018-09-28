@@ -124,9 +124,11 @@ function appendElements(elements, container) {
 
 function generateObjects(quantity) {
   var objects = [];
+  var names = NAMES;
   for (var i = 0; i < quantity; i++) {
+    var randomNameIndex = getRandomNumber(0, names.length - 1); // уникальное имя
     objects[i] = {
-      name: getRandomElement(NAMES),
+      name: names[randomNameIndex],
       picture: PATH + getRandomElement(IMAGES_NAMES) + FILE_EXTENSION,
       amount: getRandomNumber(AMOUNT_MIN, AMOUNT_MAX),
       price: getRandomNumber(PRICE_MIN, PRICE_MAX),
@@ -141,6 +143,7 @@ function generateObjects(quantity) {
         contents: generateString(INGRIDIENTS_LIST, getRandomNumber(0, INGRIDIENTS_LIST.length))
       }
     };
+    names.splice(randomNameIndex, 1);
   }
   return objects;
 }
@@ -319,29 +322,84 @@ function calculatePercent(element, shift) {
 // 2.
 
 /*
-1. при добавлении товара в корзину перезаписать свойство amount у объекта
-   проверить не нужно ли поменять класс количества
-   добавить проверку на то что товара больше нуля
+1. поиск по имени, а не по номеру товара
+
+   увеличение количества одноименного товара
+   добавить проверку на то что товара больше нуля +
    добавить проверку на то что такой товар в корзине есть/нет
+   удаление товара
+   показ блока что товаров нет, если удалены все товары
 */
 
+// проверить есть ли в корзине такой же эл-т
+//
 document.querySelector('.catalog__cards').addEventListener('click', onCardButtonClick);
 
 function onCardButtonClick(evt) {
   evt.preventDefault();
   if (evt.target.classList.contains('card__btn')) {
-    var object = cardObjects[findElementIndex(evt)]; // cardObjects - глобальная переменная
+    var cartContainer = document.querySelector('.goods__cards');
+    var elementsInCart = document.querySelectorAll('.goods_card');
+    var object = findObjectByName(cardObjects, getElementName(evt));
     var cartObject = transformObject(object);
+    var name = getElementName(evt);
 
-    hideEmptyCartStatus();
-    changeItemAmount(object);
+    if (elementsInCart.length === 0) { // если корзина пуста, убираем надпись и просто вставляем элемент
+      hideEmptyCartStatus();
+      appendElements(createCartElement(cartObject), cartContainer);
+      console.log('Корзина была пуста, но теперь получила свой первый элемент');
+    }
+
+    else {
+      elementsInCart = document.querySelectorAll('.goods_card');
+      if (checkItemInCart(elementsInCart, name)) {
+        console.log(name);
+        findElementByName(elementsInCart, name).querySelector('.card-order__count').value++;
+      } else {
+        appendElements(createCartElement(cartObject), cartContainer);
+      }
+      console.log(elementsInCart);
+    }
+
+    decreaseItemAmount(object);
     setAmountClass(object, evt.target.closest('.catalog__card'));
-    appendElements(createCartElement(cartObject), document.querySelector('.goods__cards'));
+
     evt.target.blur();
   }
 }
 
-function findElementIndex(evt) { // переделать на поиск по имени
+function checkItemInCart(array, name) {
+  var flag = false;
+  for (var i = 0; i < array.length; i++) {
+    if (array[i].querySelector('.card-order__title').textContent === name) { // ошибка возникает из-за того, что в elementsInCart нет последнего добавленного объекта
+      console.log('имя совпадает!');
+      flag = true;
+    }
+  }
+  return flag;
+}
+
+function findElementByName(array, name) {
+  var element;
+  for (var i = 0; i < array.length; i++) {
+    if (array[i].querySelector('.card-order__title').textContent === name) {
+      element = array[i];
+    }
+  }
+  return element;
+}
+
+function findObjectByName(array, name) {
+  var object;
+  for (var i = 0; i < array.length; i++) {
+    if (array[i].name === name) {
+      object = array[i];
+    }
+  }
+  return object;
+}
+
+function findElementIndex(evt) {
   var items = evt.currentTarget.querySelectorAll('.catalog__card');
   var index;
   for (var i = 0; i < items.length; i++) {
@@ -352,7 +410,11 @@ function findElementIndex(evt) { // переделать на поиск по и
   return index;
 }
 
-function changeItemAmount(object) {
+function getElementName(evt) {
+  return evt.target.closest('.catalog__card').querySelector('.card__title').textContent;
+}
+
+function decreaseItemAmount(object) {
   if (object.amount > 0) {
     object.amount--;
   }

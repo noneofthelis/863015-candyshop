@@ -106,92 +106,20 @@ var ENERGY_MIN = 70;
 var ENERGY_MAX = 500;
 
 var TOTAL_ITEMS = 26;
-var ITEMS_IN_CART = 3;
-var DEFAULT_AMOUNT_IN_CART = 1;
 
 var ENTER_KEYCODE = 27;
 var RANGE_FILTER_MIN = 0;
 var RANGE_FILTER_MAX = 100;
 
-//
+
 hideCatalogLoadStatus();
-//hideEmptyCartStatus();
-appendElements(generateObjects(TOTAL_ITEMS));
 
-function hideCatalogLoadStatus() {
-  var catalogBlock = document.querySelector('.catalog__cards');
-  catalogBlock.classList.remove('catalog__cards--load');
-  catalogBlock.querySelector('.catalog__load').classList.add('visually-hidden');
-}
+var cardObjects = generateObjects(TOTAL_ITEMS);
 
-function hideEmptyCartStatus() {
-  var cartBlock = document.querySelector('.goods__cards');
-  cartBlock.classList.remove('goods__cards--empty');
-  cartBlock.querySelector('.goods__card-empty').style.display = 'none';
-}
+appendElements(createElements(cardObjects), document.querySelector('.catalog__cards')); // для каталога
 
-function appendElements(objects) {
-  var catalogItemTemplate = document.querySelector('#card').content.querySelector('.catalog__card');
-  var cartItemTemplate = document.querySelector('#card-order').content.querySelector('.goods_card');
-  var cartObjects = chooseRandomObjects(objects, ITEMS_IN_CART);
-
-  document.querySelector('.catalog__cards').appendChild(createItems(objects, catalogItemTemplate));
-  //document.querySelector('.goods__cards').appendChild(createCartElements(cartObjects, cartItemTemplate));
-}
-
-function createCartElements(objects, template) {
-  var fragment = document.createDocumentFragment();
-  for (var i = 0; i < objects.length; i++) {
-    var object = objects[i];
-    var element = template.cloneNode(true);
-
-    element.querySelector('.card-order__title').textContent = object.name;
-    element.querySelector('.card-order__img').src = object.picture;
-    element.querySelector('.card-order__img').alt = object.name;
-    element.querySelector('.card-order__price').textContent = object.price + ' ₽';
-    element.querySelector('.card-order__count').value = DEFAULT_AMOUNT_IN_CART;
-
-    fragment.appendChild(element);
-  }
-  return fragment;
-}
-
-function createItems(objects, template) {
-  var fragment = document.createDocumentFragment();
-  for (var i = 0; i < objects.length; i++) {
-    var object = objects[i];
-    var element = template.cloneNode(true);
-
-    if (object.amount <= 5) {
-      element.classList.remove('card--in-stock');
-      element.classList.add(object.amount === 0 ? 'card--soon' : 'card--little');
-    }
-
-    var price = element.querySelector('.card__price');
-    price.firstChild.data = object.price + ' ';
-    price.lastElementChild.textContent = '/ ' + object.weight + ' Г';
-    element.querySelector('.card__title').textContent = object.name;
-    element.querySelector('.card__img').src = object.picture;
-    element.querySelector('.card__img').alt = object.name;
-    element.querySelector('.stars__rating').classList.remove('stars__rating--five');
-    element.querySelector('.stars__rating').classList.add(setRatingClass(object));
-    element.querySelector('.star__count').textContent = object.rating.number;
-    element.querySelector('.card__characteristic').textContent = setNutritionalValue(object);
-    element.querySelector('.card__composition-list').textContent = object.nutritionFacts.contents;
-
-    fragment.appendChild(element);
-  }
-  return fragment;
-}
-
-function setRatingClass(object) {
-  var rating = object.rating.value;
-  return RATING_CLASS_PREFIX + NUMBERS_IN_WRITTEN[rating];
-}
-
-function setNutritionalValue(object) {
-  var sugarContents = object.nutritionFacts.sugar ? 'Содержит сахар ' : 'Без сахара ';
-  return sugarContents + object.nutritionFacts.energy + ' ккал';
+function appendElements(elements, container) {
+  container.appendChild(elements);
 }
 
 function generateObjects(quantity) {
@@ -217,7 +145,49 @@ function generateObjects(quantity) {
   return objects;
 }
 
-function chooseRandomObjects(array, amount) {
+function createElements(objects) {
+  var template = document.querySelector('#card').content.querySelector('.catalog__card'); // создала переменную, чтобы на каждой итерации цикла ее не искать
+  var fragment = document.createDocumentFragment();
+  for (var i = 0; i < objects.length; i++) {
+    var object = objects[i];
+    var element = template.cloneNode(true);
+    var price = element.querySelector('.card__price');
+
+    price.firstChild.data = object.price + ' ';
+    price.lastElementChild.textContent = '/ ' + object.weight + ' Г';
+    element.querySelector('.card__title').textContent = object.name;
+    element.querySelector('.card__img').src = object.picture;
+    element.querySelector('.card__img').alt = object.name;
+    element.querySelector('.stars__rating').classList.remove('stars__rating--five');
+    element.querySelector('.stars__rating').classList.add(setRatingClass(object));
+    element.querySelector('.star__count').textContent = object.rating.number;
+    element.querySelector('.card__characteristic').textContent = setNutritionalValue(object);
+    element.querySelector('.card__composition-list').textContent = object.nutritionFacts.contents;
+    setAmountClass(object, element);
+
+    fragment.appendChild(element);
+  }
+  return fragment;
+}
+
+function setAmountClass(object, element) {
+  if (object.amount <= 5) {
+    element.classList.remove('card--in-stock');
+    element.classList.add(object.amount === 0 ? 'card--soon' : 'card--little');
+  }
+}
+
+function setRatingClass(object) {
+  var rating = object.rating.value;
+  return RATING_CLASS_PREFIX + NUMBERS_IN_WRITTEN[rating];
+}
+
+function setNutritionalValue(object) {
+  var sugarContents = object.nutritionFacts.sugar ? 'Содержит сахар ' : 'Без сахара ';
+  return sugarContents + object.nutritionFacts.energy + ' ккал';
+}
+
+/* function chooseRandomObjects(array, amount) {
   var objects = [];
   var i = 0;
   while (i < amount) {
@@ -227,7 +197,7 @@ function chooseRandomObjects(array, amount) {
     }
   }
   return objects;
-}
+}*/
 
 function generateString(array, numberOfElements) {
   var string = '';
@@ -246,6 +216,18 @@ function getRandomNumber(min, max) {
 
 function getRandomElement(array) {
   return array[Math.floor(Math.random() * array.length)];
+}
+
+function hideCatalogLoadStatus() {
+  var catalogBlock = document.querySelector('.catalog__cards');
+  catalogBlock.classList.remove('catalog__cards--load');
+  catalogBlock.querySelector('.catalog__load').classList.add('visually-hidden');
+}
+
+function hideEmptyCartStatus() {
+  var cartBlock = document.querySelector('.goods__cards');
+  cartBlock.classList.remove('goods__cards--empty');
+  cartBlock.querySelector('.goods__card-empty').style.display = 'none';
 }
 
 // #15
@@ -322,14 +304,83 @@ function onRangeFilterMouseUp(evt) {
 function setRangePrice(element) {
   var rangePriceParent = element.parentElement.nextElementSibling;
   var rangePrice = rangePriceParent.firstElementChild;
-  var shift = 0;
+  var elementWidth = 0;
   if (element !== element.parentElement.firstElementChild) {
     rangePrice = rangePriceParent.lastElementChild;
-    shift = element.clientWidth;
+    elementWidth = element.clientWidth;
   }
-  rangePrice.textContent = (RANGE_FILTER_MAX - RANGE_FILTER_MIN) * calculatePercent(element, shift);
+  rangePrice.textContent = (RANGE_FILTER_MAX - RANGE_FILTER_MIN) * calculatePercent(element, elementWidth);
 }
 
 function calculatePercent(element, shift) {
   return ((element.offsetLeft + shift) / element.parentElement.clientWidth).toFixed(2);
+}
+
+// 2.
+
+/*
+1. при добавлении товара в корзину перезаписать свойство amount у объекта
+   проверить не нужно ли поменять класс количества
+   добавить проверку на то что товара больше нуля
+   добавить проверку на то что такой товар в корзине есть/нет
+*/
+
+document.querySelector('.catalog__cards').addEventListener('click', onCardButtonClick);
+
+function onCardButtonClick(evt) {
+  evt.preventDefault();
+  if (evt.target.classList.contains('card__btn')) {
+    var object = cardObjects[findElementIndex(evt)]; // cardObjects - глобальная переменная
+    var cartObject = transformObject(object);
+
+    hideEmptyCartStatus();
+    changeItemAmount(object);
+    setAmountClass(object, evt.target.closest('.catalog__card'));
+    appendElements(createCartElement(cartObject), document.querySelector('.goods__cards'));
+    evt.target.blur();
+  }
+}
+
+function findElementIndex(evt) { // переделать на поиск по имени
+  var items = evt.currentTarget.querySelectorAll('.catalog__card');
+  var index;
+  for (var i = 0; i < items.length; i++) {
+    if (items[i] === evt.target.closest('.catalog__card')) {
+      index = i;
+    }
+  }
+  return index;
+}
+
+function changeItemAmount(object) {
+  if (object.amount > 0) {
+    object.amount--;
+  }
+}
+
+function transformObject(object) {
+  var cartObject = Object.assign({}, object);
+  delete cartObject.nutritionFacts;
+  delete cartObject.rating;
+  delete cartObject.weight;
+  cartObject.amount = 1;
+
+  return cartObject;
+}
+
+function createCartElement(object) {
+  var fragment = document.createDocumentFragment();
+  var element = document.querySelector('#card-order')
+                        .content.querySelector('.goods_card')
+                        .cloneNode(true);
+
+  element.querySelector('.card-order__title').textContent = object.name;
+  element.querySelector('.card-order__img').src = object.picture;
+  element.querySelector('.card-order__img').alt = object.name;
+  element.querySelector('.card-order__price').textContent = object.price + ' ₽';
+  element.querySelector('.card-order__count').value = object.amount;
+
+  fragment.appendChild(element);
+
+  return fragment;
 }

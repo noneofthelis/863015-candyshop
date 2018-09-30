@@ -233,9 +233,16 @@ function hideEmptyCartStatus() {
   cartBlock.querySelector('.goods__card-empty').style.display = 'none';
 }
 
+function showEmptyCartStatus() {
+  var cartBlock = document.querySelector('.goods__cards');
+  cartBlock.classList.add('goods__cards--empty');
+  cartBlock.querySelector('.goods__card-empty').style.display = 'block';
+}
+
 // #15
 
 // 3.
+
 document.querySelector('.deliver').addEventListener('click', onInputClick);
 document.querySelector('.payment__inner').addEventListener('click', onInputClick); // а норм ли
 
@@ -322,18 +329,24 @@ function calculatePercent(element, shift) {
 // 2.
 
 /*
-1. поиск по имени, а не по номеру товара
-
-   увеличение количества одноименного товара
-   добавить проверку на то что товара больше нуля +
-   добавить проверку на то что такой товар в корзине есть/нет
-   удаление товара
-   показ блока что товаров нет, если удалены все товары
+  При этом должно измениться количество товаров в инпуте внутри card-order__label и пересчитаться сумма в корзине.
+При изменении количества товаров в корзине,
+не забывайте обновлять блок корзины в шапке .main-header__basket,
+добавляя в него количество выбранных товаров и их общую сумму. Например: В корзине 3 товара на 990₽.
 */
 
-// проверить есть ли в корзине такой же эл-т
+/*
+
+
+на изменение значения инпут
++ инпут должен исправляться на максимально возможное значение
+
+
+*/
+
 //
 document.querySelector('.catalog__cards').addEventListener('click', onCardButtonClick);
+
 
 function onCardButtonClick(evt) {
   evt.preventDefault();
@@ -342,28 +355,26 @@ function onCardButtonClick(evt) {
     var elementsInCart = document.querySelectorAll('.goods_card');
     var object = findObjectByName(cardObjects, getElementName(evt));
     var cartObject = transformObject(object);
-    var name = getElementName(evt);
 
-    if (elementsInCart.length === 0) { // если корзина пуста, убираем надпись и просто вставляем элемент
-      hideEmptyCartStatus();
-      appendElements(createCartElement(cartObject), cartContainer);
-      console.log('Корзина была пуста, но теперь получила свой первый элемент');
-    }
-
-    else {
-      elementsInCart = document.querySelectorAll('.goods_card');
-      if (checkItemInCart(elementsInCart, name)) {
-        console.log(name);
-        findElementByName(elementsInCart, name).querySelector('.card-order__count').value++;
-      } else {
+    if (object.amount > 0) {
+      if (elementsInCart.length === 0) { // если корзина пуста, убираем надпись и просто вставляем элемент
+        hideEmptyCartStatus();
         appendElements(createCartElement(cartObject), cartContainer);
+      } else { // если корзина не пуста
+        elementsInCart = document.querySelectorAll('.goods_card');
+        if (checkItemInCart(elementsInCart, getElementName(evt))) {
+          findElementByName(elementsInCart, getElementName(evt)).querySelector('.card-order__count').value++;
+          console.log(findElementByName(elementsInCart, getElementName(evt)).querySelector('.card-order__count').value);
+        } else {
+          appendElements(createCartElement(cartObject), cartContainer);
+        }
       }
-      console.log(elementsInCart);
+      console.log(object);
+      console.log('было ', object.amount);
+      object.amount--;
+      console.log('стало ', object.amount);
     }
-
-    decreaseItemAmount(object);
     setAmountClass(object, evt.target.closest('.catalog__card'));
-
     evt.target.blur();
   }
 }
@@ -371,8 +382,7 @@ function onCardButtonClick(evt) {
 function checkItemInCart(array, name) {
   var flag = false;
   for (var i = 0; i < array.length; i++) {
-    if (array[i].querySelector('.card-order__title').textContent === name) { // ошибка возникает из-за того, что в elementsInCart нет последнего добавленного объекта
-      console.log('имя совпадает!');
+    if (array[i].querySelector('.card-order__title').textContent === name) {
       flag = true;
     }
   }
@@ -399,6 +409,7 @@ function findObjectByName(array, name) {
   return object;
 }
 
+/*
 function findElementIndex(evt) {
   var items = evt.currentTarget.querySelectorAll('.catalog__card');
   var index;
@@ -408,16 +419,10 @@ function findElementIndex(evt) {
     }
   }
   return index;
-}
+}*/
 
 function getElementName(evt) {
   return evt.target.closest('.catalog__card').querySelector('.card__title').textContent;
-}
-
-function decreaseItemAmount(object) {
-  if (object.amount > 0) {
-    object.amount--;
-  }
 }
 
 function transformObject(object) {
@@ -425,7 +430,8 @@ function transformObject(object) {
   delete cartObject.nutritionFacts;
   delete cartObject.rating;
   delete cartObject.weight;
-  cartObject.amount = 1;
+  delete cartObject.amount;
+  cartObject.orderedAmount = 1;
 
   return cartObject;
 }
@@ -440,9 +446,53 @@ function createCartElement(object) {
   element.querySelector('.card-order__img').src = object.picture;
   element.querySelector('.card-order__img').alt = object.name;
   element.querySelector('.card-order__price').textContent = object.price + ' ₽';
-  element.querySelector('.card-order__count').value = object.amount;
+  element.querySelector('.card-order__count').value = object.orderedAmount;
+
+  element.addEventListener('click', function (evt) {
+    onCartElementClick(evt, object, element);
+  });
 
   fragment.appendChild(element);
 
   return fragment;
 }
+
+// косяк: если заказать несколько товаров через добавить +1, а потом нажать на увеличить/уменьшить то кол-во заказанного товара становится 2.
+function onCartElementClick(evt, object, element) {
+  var catalogObject = findObjectByName(cardObjects, object.name);
+  object.orderedAmount = element.querySelector('.card-order__count').value;
+  if (evt.target.classList.contains('card-order__btn--increase')) {
+    if (catalogObject.amount > 0) {
+      console.log('object: ', object, 'catalogObject: ', catalogObject);
+       console.log('было ', object.orderedAmount, catalogObject.amount);
+      object.orderedAmount++;
+      catalogObject.amount--;
+      console.log('стало ', object.orderedAmount, catalogObject.amount);
+    }
+  } else if (evt.target.classList.contains('card-order__btn--decrease')) {
+    if (object.orderedAmount > 0) {
+      console.log('object: ', object, 'catalogObject: ', catalogObject);
+     console.log('было ', object.orderedAmount, catalogObject.amount);
+      object.orderedAmount--;
+      catalogObject.amount++;
+      console.log('стало ', object.orderedAmount, catalogObject.amount);
+    }
+    if (object.orderedAmount === 0) {
+      removeCartElement(element, object);
+    }
+  } else if (evt.target.classList.contains('card-order__close')) {
+    evt.preventDefault();
+    removeCartElement(element, object);
+  }
+  element.querySelector('.card-order__count').value = object.orderedAmount;
+}
+
+function removeCartElement(element, object) {
+  findObjectByName(cardObjects, object.name).amount += object.orderedAmount;
+  if (element.parentElement.children.length < 3) { // тупо
+    showEmptyCartStatus();
+  }
+  element.parentElement.removeChild(element);
+}
+
+// попробовать case

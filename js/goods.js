@@ -110,13 +110,12 @@ var TOTAL_ITEMS = 26;
 var ENTER_KEYCODE = 27;
 var RANGE_FILTER_MIN = 0;
 var RANGE_FILTER_MAX = 100;
-
+var catalogObjects = generateObjects(TOTAL_ITEMS);
+var cartObjects = [];
 
 hideCatalogLoadStatus();
-
-var cardObjects = generateObjects(TOTAL_ITEMS);
-
-appendElements(createElements(cardObjects), document.querySelector('.catalog__cards')); // для каталога
+appendElements(createElements(catalogObjects), document.querySelector('.catalog__cards')); // для каталога
+initHandlers();
 
 function appendElements(elements, container) {
   container.appendChild(elements);
@@ -190,18 +189,6 @@ function setNutritionalValue(object) {
   return sugarContents + object.nutritionFacts.energy + ' ккал';
 }
 
-/* function chooseRandomObjects(array, amount) {
-  var objects = [];
-  var i = 0;
-  while (i < amount) {
-    objects[i] = getRandomElement(array);
-    if (objects[i].amount > 0) {
-      i++;
-    }
-  }
-  return objects;
-}*/
-
 function generateString(array, numberOfElements) {
   var string = '';
   for (var i = 1; i <= numberOfElements; i++) {
@@ -241,10 +228,16 @@ function showEmptyCartStatus() {
 
 // #15
 
-// 3.
+function initHandlers() {
+  document.querySelector('.catalog__cards').addEventListener('click', onFavouriteButtonClick); // 1.
+  document.querySelector('.catalog__cards').addEventListener('keydown', onFavouriteButtonPress); // 1.
+  document.querySelector('.catalog__cards').addEventListener('click', onCardButtonClick); // 2.
+  document.querySelector('.deliver').addEventListener('click', onInputClick); // 3.
+  document.querySelector('.payment__inner').addEventListener('click', onInputClick); // 3.
+  document.querySelector('.catalog__filter.range').addEventListener('mouseup', onRangeFilterMouseUp); // 4.
+}
 
-document.querySelector('.deliver').addEventListener('click', onInputClick);
-document.querySelector('.payment__inner').addEventListener('click', onInputClick);
+// 3.
 
 function onInputClick(evt) {
   if (evt.target.classList.contains('toggle-btn__input')) {
@@ -280,9 +273,6 @@ function setInputsDisability(element, hiddenElement) { // пункт 9.2 ТЗ
 
 // 1.
 
-document.querySelector('.catalog__cards').addEventListener('click', onFavouriteButtonClick);
-document.querySelector('.catalog__cards').addEventListener('keydown', onFavouriteButtonPress);
-
 function onFavouriteButtonClick(evt) {
   if (evt.target.classList.contains('card__btn-favorite')) {
     toggleFavouriteClass(evt);
@@ -302,8 +292,6 @@ function toggleFavouriteClass(evt) {
 }
 
 // 4.
-
-document.querySelector('.catalog__filter.range').addEventListener('mouseup', onRangeFilterMouseUp);
 
 function onRangeFilterMouseUp(evt) {
   if (evt.target.tagName === 'BUTTON') {
@@ -328,82 +316,7 @@ function calculatePercent(element, shift) {
 
 // 2.
 
-/* TODO:
-- (нет в ТЗ) Показать 'goods__total-count' и общую сумму товаров и денег.
-- При изменении количества товаров в корзине,
-не забывайте обновлять блок корзины в шапке .main-header__basket,
-добавляя в него количество выбранных товаров и их общую сумму. Например: В корзине 3 товара на 990₽.
-- ? (нет в ТЗ) Если пользователь меняет количество товаров с клавиатуры
-*/
-
-document.querySelector('.catalog__cards').addEventListener('click', onCardButtonClick);
-
-
-function onCardButtonClick(evt) {
-  evt.preventDefault();
-  if (evt.target.classList.contains('card__btn')) {
-    var cartContainer = document.querySelector('.goods__cards');
-    var elementsInCart = document.querySelectorAll('.goods_card');
-    var object = findObjectByName(cardObjects, getElementName(evt));
-    var cartObject = transformObject(object);
-
-    if (object.amount > 0) {
-      if (elementsInCart.length === 0) {
-        hideEmptyCartStatus();
-        appendElements(createCartElement(cartObject), cartContainer);
-      } else {
-        elementsInCart = document.querySelectorAll('.goods_card');
-        if (checkItemInCart(elementsInCart, getElementName(evt))) {
-          var cartElement = findElementByName(elementsInCart, getElementName(evt));
-          cartElement.querySelector('.card-order__count').value++;
-          var orderedAmount = cartElement.querySelector('.card-order__count').value;
-          cartElement.querySelector('.card-order__price').textContent = orderedAmount * object.price + ' ₽';
-        } else {
-          appendElements(createCartElement(cartObject), cartContainer);
-        }
-      }
-      object.amount--;
-    }
-    setAmountClass(object, evt.target.closest('.catalog__card'));
-    evt.target.blur();
-  }
-}
-
-function checkItemInCart(array, name) {
-  var flag = false;
-  for (var i = 0; i < array.length; i++) {
-    if (array[i].querySelector('.card-order__title').textContent === name) {
-      flag = true;
-    }
-  }
-  return flag;
-}
-
-function findElementByName(array, name) {
-  var element;
-  for (var i = 0; i < array.length; i++) {
-    if (array[i].querySelector('.card-order__title').textContent === name) {
-      element = array[i];
-    }
-  }
-  return element;
-}
-
-function findObjectByName(array, name) {
-  var object;
-  for (var i = 0; i < array.length; i++) {
-    if (array[i].name === name) {
-      object = array[i];
-    }
-  }
-  return object;
-}
-
-function getElementName(evt) {
-  return evt.target.closest('.catalog__card').querySelector('.card__title').textContent;
-}
-
-function transformObject(object) {
+function createCartObject(object) {
   var cartObject = Object.assign({}, object);
   delete cartObject.nutritionFacts;
   delete cartObject.rating;
@@ -436,31 +349,116 @@ function createCartElement(object) {
 }
 
 function onCartElementClick(evt, object, element) {
-  var catalogObject = findObjectByName(cardObjects, object.name);
-  object.orderedAmount = element.querySelector('.card-order__count').value;
-  if (evt.target.classList.contains('card-order__btn--increase') && catalogObject.amount > 0) {
-    object.orderedAmount++;
-    catalogObject.amount--;
+  var catalogObject = findObjectByName(catalogObjects, object.name);
+  var cartObject = findObjectByName(cartObjects, object.name);
+  var catalogElement = findElementByName(document.querySelectorAll('.catalog__card'), cartObject.name, '.card__title');
+  if (evt.target.classList.contains('card-order__btn--increase')) {
+    updateAmountInObjects(catalogObject, cartObject, true);
   } else if (evt.target.classList.contains('card-order__btn--decrease')) {
-    if (object.orderedAmount > 0) {
-      object.orderedAmount--;
-      catalogObject.amount++;
-    }
+    updateAmountInObjects(catalogObject, cartObject, false);
     if (object.orderedAmount === 0) {
       removeCartElement(element, object);
+      removeCartObject(cartObject);
     }
   } else if (evt.target.classList.contains('card-order__close')) {
     evt.preventDefault();
     removeCartElement(element, object);
+    removeCartObject(cartObject);
   }
   element.querySelector('.card-order__price').textContent = object.orderedAmount * object.price + ' ₽';
   element.querySelector('.card-order__count').value = object.orderedAmount;
+  setAmountClass(catalogObject, catalogElement);
+}
+
+function onCardButtonClick(evt) {
+  evt.preventDefault();
+  evt.target.blur();
+  var cartObject = createCartObject(findObjectByName(catalogObjects, getElementName(evt)));
+  setCartObjectInArray(cartObject);
+  addElementToCart(cartObject.name);
 }
 
 function removeCartElement(element, object) {
-  findObjectByName(cardObjects, object.name).amount += object.orderedAmount;
+  findObjectByName(catalogObjects, object.name).amount += object.orderedAmount;
   if (element.parentElement.children.length < 3) {
     showEmptyCartStatus();
   }
   element.parentElement.removeChild(element);
+}
+
+function removeCartObject(cartObject) {
+  cartObjects.splice(findObjectByName(cartObjects, cartObject.name), 1);
+}
+
+// isIncrease: true или false, в зависимости от того, добавляем или удаляем объекты в корзину
+function updateAmountInObjects(catalogObject, cartObject, isIncrease) {
+  if (isIncrease && catalogObject.amount > 0) {
+    cartObject.orderedAmount++;
+    catalogObject.amount--;
+  }
+  if (!isIncrease && cartObject.orderedAmount > 0) {
+    cartObject.orderedAmount--;
+    catalogObject.amount++;
+  }
+}
+
+function addElementToCart(objectName) {
+  var cart = document.querySelector('.goods__cards');
+  var cartObject = findObjectByName(cartObjects, objectName);
+  var catalogObject = findObjectByName(catalogObjects, objectName);
+  var cartElement = findElementByName(document.querySelectorAll('.goods_card'), objectName, '.card-order__title');
+  var catalogElement = findElementByName(document.querySelectorAll('.catalog__card'), objectName, '.card__title');
+
+  if (catalogObject.amount > 0) {
+    if (cart.children.length === 1) {
+      hideEmptyCartStatus();
+    }
+    if (!areItemInCart(document.querySelectorAll('.goods_card'), objectName)) {
+      appendElements(createCartElement(cartObject), cart);
+    } else {
+      cartElement.querySelector('.card-order__count').value++;
+      updateAmountInObjects(catalogObject, cartObject, true);
+    }
+  }
+  setAmountClass(catalogObject, catalogElement);
+}
+
+function setCartObjectInArray(cartObject) {
+  if (!findObjectByName(cartObjects, cartObject.name)) {
+    cartObjects.push(cartObject);
+  }
+}
+
+function areItemInCart(array, name) {
+  var flag = false;
+  for (var i = 0; i < array.length; i++) {
+    if (array[i].querySelector('.card-order__title').textContent === name) {
+      flag = true;
+    }
+  }
+  return flag;
+}
+
+function getElementName(evt) {
+  return evt.target.closest('.catalog__card').querySelector('.card__title').textContent;
+}
+
+function findObjectByName(array, name) {
+  var object;
+  for (var i = 0; i < array.length; i++) {
+    if (array[i].name === name) {
+      object = array[i];
+    }
+  }
+  return object;
+}
+
+function findElementByName(array, name, selector) {
+  var element;
+  for (var i = 0; i < array.length; i++) {
+    if (array[i].querySelector(selector).textContent === name) {
+      element = array[i];
+    }
+  }
+  return element;
 }

@@ -127,6 +127,7 @@ function generateObjects(quantity) {
   for (var i = 0; i < quantity; i++) {
     var randomNameIndex = getRandomNumber(0, names.length - 1); // уникальное имя
     objects[i] = {
+      id: i,
       name: names[randomNameIndex],
       picture: PATH + getRandomElement(IMAGES_NAMES) + FILE_EXTENSION,
       amount: getRandomNumber(AMOUNT_MIN, AMOUNT_MAX),
@@ -165,6 +166,7 @@ function createElements(objects) {
     element.querySelector('.star__count').textContent = object.rating.number;
     element.querySelector('.card__characteristic').textContent = setNutritionalValue(object);
     element.querySelector('.card__composition-list').textContent = object.nutritionFacts.contents;
+    element.setAttribute('data-id', object.id);
     setAmountClass(object, element);
 
     fragment.appendChild(element);
@@ -316,6 +318,15 @@ function calculatePercent(element, shift) {
 
 // 2.
 
+/* TODO:
+- (нет в ТЗ) Показать 'goods__total-count' и общую сумму товаров и денег.
+- При изменении количества товаров в корзине,
+не забывайте обновлять блок корзины в шапке .main-header__basket,
+добавляя в него количество выбранных товаров и их общую сумму. Например: В корзине 3 товара на 990₽.
+- ? (нет в ТЗ) Если пользователь меняет количество товаров с клавиатуры
+-- ! КОСЯК: при удалении товара в amount записывается количество, большее на единицу
+*/
+
 function createCartObject(object) {
   var cartObject = Object.assign({}, object);
   delete cartObject.nutritionFacts;
@@ -338,6 +349,7 @@ function createCartElement(object) {
   element.querySelector('.card-order__img').alt = object.name;
   element.querySelector('.card-order__price').textContent = object.price + ' ₽';
   element.querySelector('.card-order__count').value = object.orderedAmount;
+  element.setAttribute('data-id', object.id);
 
   element.addEventListener('click', function (evt) {
     onCartElementClick(evt, object, element);
@@ -349,9 +361,10 @@ function createCartElement(object) {
 }
 
 function onCartElementClick(evt, object, element) {
-  var catalogObject = findObjectByName(catalogObjects, object.name);
-  var cartObject = findObjectByName(cartObjects, object.name);
-  var catalogElement = findElementByName(document.querySelectorAll('.catalog__card'), cartObject.name, '.card__title');
+  var catalogObject = catalogObjects[object.id];
+  var cartObject = findObjectByName(cartObjects, object.name); // name
+  var catalogElement = document.querySelector('.catalog__card[data-id="' + object.id + '"]');
+
   if (evt.target.classList.contains('card-order__btn--increase')) {
     updateAmountInObjects(catalogObject, cartObject, true);
   } else if (evt.target.classList.contains('card-order__btn--decrease')) {
@@ -365,21 +378,24 @@ function onCartElementClick(evt, object, element) {
     removeCartElement(element, object);
     removeCartObject(cartObject);
   }
+
   element.querySelector('.card-order__price').textContent = object.orderedAmount * object.price + ' ₽';
   element.querySelector('.card-order__count').value = object.orderedAmount;
   setAmountClass(catalogObject, catalogElement);
 }
 
+// исправить: при добавлении более одного объекта не пересчитывается цена
 function onCardButtonClick(evt) {
   evt.preventDefault();
   evt.target.blur();
-  var cartObject = createCartObject(findObjectByName(catalogObjects, getElementName(evt)));
+  var id = Number(evt.target.closest('.catalog__card ').getAttribute('data-id'));
+  var cartObject = createCartObject(catalogObjects[id]);
   setCartObjectInArray(cartObject);
-  addElementToCart(cartObject.name);
+  addElementToCart(cartObject);
 }
 
 function removeCartElement(element, object) {
-  findObjectByName(catalogObjects, object.name).amount += object.orderedAmount;
+  catalogObjects[object.id].amount += object.orderedAmount;
   if (element.parentElement.children.length < 3) {
     showEmptyCartStatus();
   }
@@ -387,7 +403,7 @@ function removeCartElement(element, object) {
 }
 
 function removeCartObject(cartObject) {
-  cartObjects.splice(findObjectByName(cartObjects, cartObject.name), 1);
+  cartObjects.splice(findObjectByName(cartObjects, cartObject.name), 1); // name
 }
 
 // isIncrease: true или false, в зависимости от того, добавляем или удаляем объекты в корзину
@@ -402,19 +418,20 @@ function updateAmountInObjects(catalogObject, cartObject, isIncrease) {
   }
 }
 
-function addElementToCart(objectName) {
+function addElementToCart(object) {
+
   var cart = document.querySelector('.goods__cards');
-  var cartObject = findObjectByName(cartObjects, objectName);
-  var catalogObject = findObjectByName(catalogObjects, objectName);
-  var cartElement = findElementByName(document.querySelectorAll('.goods_card'), objectName, '.card-order__title');
-  var catalogElement = findElementByName(document.querySelectorAll('.catalog__card'), objectName, '.card__title');
+  var cartObject = findObjectByName(cartObjects, object.name); // если не найти этот объект, то у него не перезаписывается кол-во
+  var catalogObject = catalogObjects[object.id];
+  var cartElement = document.querySelector('.goods_card[data-id="' + object.id + '"]');
+  var catalogElement = document.querySelector('.catalog__card[data-id="' + object.id + '"]');
 
   if (catalogObject.amount > 0) {
     if (cart.children.length === 1) {
       hideEmptyCartStatus();
     }
-    if (!areItemInCart(document.querySelectorAll('.goods_card'), objectName)) {
-      appendElements(createCartElement(cartObject), cart);
+    if (cartElement === null) {
+      appendElements(createCartElement(object), cart);
     } else {
       cartElement.querySelector('.card-order__count').value++;
       updateAmountInObjects(catalogObject, cartObject, true);
@@ -424,26 +441,22 @@ function addElementToCart(objectName) {
 }
 
 function setCartObjectInArray(cartObject) {
-  if (!findObjectByName(cartObjects, cartObject.name)) {
+  if (!isObjectInArray(cartObjects, cartObject)) {
     cartObjects.push(cartObject);
   }
 }
 
-function areItemInCart(array, name) {
+function isObjectInArray(array, object) {
   var flag = false;
   for (var i = 0; i < array.length; i++) {
-    if (array[i].querySelector('.card-order__title').textContent === name) {
+    if (array[i].id === object.id) {
       flag = true;
     }
   }
   return flag;
 }
 
-function getElementName(evt) {
-  return evt.target.closest('.catalog__card').querySelector('.card__title').textContent;
-}
-
-function findObjectByName(array, name) {
+function findObjectByName(array, name) { // name
   var object;
   for (var i = 0; i < array.length; i++) {
     if (array[i].name === name) {
@@ -451,14 +464,4 @@ function findObjectByName(array, name) {
     }
   }
   return object;
-}
-
-function findElementByName(array, name, selector) {
-  var element;
-  for (var i = 0; i < array.length; i++) {
-    if (array[i].querySelector(selector).textContent === name) {
-      element = array[i];
-    }
-  }
-  return element;
 }

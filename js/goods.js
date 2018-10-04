@@ -118,6 +118,7 @@ var cart = {
 
 hideCatalogLoadStatus();
 appendElements(createElements(catalogObjects), catalogBlock);
+setOrderFormAbitily();
 initHandlers();
 
 function appendElements(elements, container) {
@@ -126,9 +127,9 @@ function appendElements(elements, container) {
 
 function generateObjects(quantity) {
   var objects = [];
-  var names = NAMES;
+  var names = NAMES.slice();
   for (var i = 0; i < quantity; i++) {
-    var randomNameIndex = getRandomNumber(0, names.length - 1); // уникальное имя
+    var randomNameIndex = getRandomNumber(0, names.length - 1);
     objects[i] = {
       id: i,
       name: names[randomNameIndex],
@@ -152,7 +153,7 @@ function generateObjects(quantity) {
 }
 
 function createElements(objects) {
-  var template = document.querySelector('#card').content.querySelector('.catalog__card'); // создала переменную, чтобы на каждой итерации цикла ее не искать
+  var template = document.querySelector('#card').content.querySelector('.catalog__card');
   var fragment = document.createDocumentFragment();
   for (var i = 0; i < objects.length; i++) {
     var object = objects[i];
@@ -169,7 +170,7 @@ function createElements(objects) {
     element.querySelector('.star__count').textContent = object.rating.number;
     element.querySelector('.card__characteristic').textContent = setNutritionalValue(object);
     element.querySelector('.card__composition-list').textContent = object.nutritionFacts.contents;
-    element.setAttribute('data-id', object.id);
+    element.dataset.id = object.id;
     setAmountClass(object, element);
 
     fragment.appendChild(element);
@@ -323,6 +324,7 @@ function onCartElementClick(evt) {
 
   renderCart();
   setAmountClass(catalogObjects[id], item);
+  setOrderFormAbitily();
 }
 
 function onCardButtonClick(evt) {
@@ -335,6 +337,7 @@ function onCardButtonClick(evt) {
   addObjectToCart(id);
   renderCart();
   setAmountClass(catalogObjects[id], item);
+  setOrderFormAbitily();
 }
 
 function renderCart() {
@@ -368,7 +371,7 @@ function createCartElement(object) {
   element.querySelector('.card-order__img').alt = object.name;
   element.querySelector('.card-order__price').textContent = object.orderedAmount * object.price + ' ₽';
   element.querySelector('.card-order__count').value = object.orderedAmount;
-  element.setAttribute('data-id', object.id);
+  element.dataset.id = object.id;
 
   element.addEventListener('click', function (evt) {
     onCartElementClick(evt);
@@ -433,5 +436,17 @@ function setHeaderCartStatus(itemsAmount, itemsPrice) {
     headerOrderBlock.textContent = 'В корзине ничего нет';
   } else {
     headerOrderBlock.textContent = 'Товара в корзине: ' + itemsAmount + ' шт. на сумму: ' + itemsPrice + ' ₽';
+  }
+}
+
+function setOrderFormAbitily() { // пункт 7.3 в ТЗ
+  var form = document.querySelector('.buy form');
+  var inputs = form.querySelectorAll('input');
+  var submitButton = form.querySelector('button[type="submit"]');
+  var cartEmptyStatus = document.querySelector('.goods__cards').children.length === 1;
+
+  for (var i = 0; i < inputs.length; i++) {
+    inputs[i].disabled = cartEmptyStatus;
+    submitButton.disabled = cartEmptyStatus;
   }
 }

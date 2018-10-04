@@ -127,9 +127,9 @@ function appendElements(elements, container) {
 
 function generateObjects(quantity) {
   var objects = [];
-  var names = NAMES;
+  var names = NAMES.slice();
   for (var i = 0; i < quantity; i++) {
-    var randomNameIndex = getRandomNumber(0, names.length - 1); // уникальное имя
+    var randomNameIndex = getRandomNumber(0, names.length - 1);
     objects[i] = {
       id: i,
       name: names[randomNameIndex],
@@ -170,7 +170,7 @@ function createElements(objects) {
     element.querySelector('.star__count').textContent = object.rating.number;
     element.querySelector('.card__characteristic').textContent = setNutritionalValue(object);
     element.querySelector('.card__composition-list').textContent = object.nutritionFacts.contents;
-    element.setAttribute('data-id', object.id);
+    element.dataset.id = object.id;
     setAmountClass(object, element);
 
     fragment.appendChild(element);
@@ -371,7 +371,7 @@ function createCartElement(object) {
   element.querySelector('.card-order__img').alt = object.name;
   element.querySelector('.card-order__price').textContent = object.orderedAmount * object.price + ' ₽';
   element.querySelector('.card-order__count').value = object.orderedAmount;
-  element.setAttribute('data-id', object.id);
+  element.dataset.id = object.id;
 
   element.addEventListener('click', function (evt) {
     onCartElementClick(evt);

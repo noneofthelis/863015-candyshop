@@ -91,7 +91,6 @@ var PATH = 'img/cards/';
 var FILE_EXTENSION = '.jpg';
 var RATING_CLASS_PREFIX = 'stars__rating--';
 
-
 var AMOUNT_MIN = 0;
 var AMOUNT_MAX = 20;
 var PRICE_MIN = 100;
@@ -105,16 +104,20 @@ var RATING_NUMBER_MAX = 900;
 var ENERGY_MIN = 70;
 var ENERGY_MAX = 500;
 
-var TOTAL_ITEMS = 26;
-
 var ENTER_KEYCODE = 27;
 var RANGE_FILTER_MIN = 0;
 var RANGE_FILTER_MAX = 100;
+var TOTAL_ITEMS = 26;
 var catalogObjects = generateObjects(TOTAL_ITEMS);
-var cartObjects = [];
+var catalogBlock = document.querySelector('.catalog__cards');
+
+var cart = {
+  ids: [],
+  items: {}
+};
 
 hideCatalogLoadStatus();
-appendElements(createElements(catalogObjects), document.querySelector('.catalog__cards')); // для каталога
+appendElements(createElements(catalogObjects), catalogBlock);
 initHandlers();
 
 function appendElements(elements, container) {
@@ -211,29 +214,16 @@ function getRandomElement(array) {
 }
 
 function hideCatalogLoadStatus() {
-  var catalogBlock = document.querySelector('.catalog__cards');
   catalogBlock.classList.remove('catalog__cards--load');
   catalogBlock.querySelector('.catalog__load').classList.add('visually-hidden');
-}
-
-function hideEmptyCartStatus() {
-  var cartBlock = document.querySelector('.goods__cards');
-  cartBlock.classList.remove('goods__cards--empty');
-  cartBlock.querySelector('.goods__card-empty').style.display = 'none';
-}
-
-function showEmptyCartStatus() {
-  var cartBlock = document.querySelector('.goods__cards');
-  cartBlock.classList.add('goods__cards--empty');
-  cartBlock.querySelector('.goods__card-empty').style.display = 'block';
 }
 
 // #15
 
 function initHandlers() {
-  document.querySelector('.catalog__cards').addEventListener('click', onFavouriteButtonClick); // 1.
-  document.querySelector('.catalog__cards').addEventListener('keydown', onFavouriteButtonPress); // 1.
-  document.querySelector('.catalog__cards').addEventListener('click', onCardButtonClick); // 2.
+  catalogBlock.addEventListener('click', onFavouriteButtonClick); // 1.
+  catalogBlock.addEventListener('keydown', onFavouriteButtonPress); // 1.
+  catalogBlock.addEventListener('click', onCardButtonClick); // 2.
   document.querySelector('.deliver').addEventListener('click', onInputClick); // 3.
   document.querySelector('.payment__inner').addEventListener('click', onInputClick); // 3.
   document.querySelector('.catalog__filter.range').addEventListener('mouseup', onRangeFilterMouseUp); // 4.
@@ -318,14 +308,76 @@ function calculatePercent(element, shift) {
 
 // 2.
 
-/* TODO:
-- (нет в ТЗ) Показать 'goods__total-count' и общую сумму товаров и денег.
-- При изменении количества товаров в корзине,
-не забывайте обновлять блок корзины в шапке .main-header__basket,
-добавляя в него количество выбранных товаров и их общую сумму. Например: В корзине 3 товара на 990₽.
-- ? (нет в ТЗ) Если пользователь меняет количество товаров с клавиатуры
--- ! КОСЯК: при удалении товара в amount записывается количество, большее на единицу
-*/
+function onCartElementClick(evt) {
+  var id = Number(evt.currentTarget.getAttribute('data-id'));
+  var item = document.querySelector('.catalog__card[data-id="' + id + '"]');
+
+  if (evt.target.classList.contains('card-order__btn--increase')) {
+    addObjectToCart(id);
+  } else if (evt.target.classList.contains('card-order__btn--decrease')) {
+    removeObjectFromCart(id);
+  } else if (evt.target.classList.contains('card-order__close')) {
+    evt.preventDefault();
+    removeAllObjectsFromCart(id);
+  }
+
+  renderCart();
+  setAmountClass(catalogObjects[id], item);
+}
+
+function onCardButtonClick(evt) {
+  evt.preventDefault();
+  evt.target.blur();
+
+  var item = evt.target.closest('.catalog__card ');
+  var id = Number(item.getAttribute('data-id'));
+
+  addObjectToCart(id);
+  renderCart();
+  setAmountClass(catalogObjects[id], item);
+}
+
+function renderCart() {
+  var cartBlock = document.querySelector('.goods__cards');
+  var cartItems = Object.keys(cart.items);
+  var totalItems = 0;
+  var totalPrice = 0;
+
+  while (cartBlock.children.length > 1) {
+    cartBlock.removeChild(cartBlock.lastChild);
+  }
+  for (var i = 0; i < cartItems.length; i++) {
+    var item = cart.items[cart.ids[i]];
+    totalItems += item.orderedAmount;
+    totalPrice += item.orderedAmount * item.price;
+    appendElements(createCartElement(item), cartBlock);
+  }
+
+  setCartStatus(cartBlock);
+  setHeaderCartStatus(totalItems, totalPrice);
+}
+
+function createCartElement(object) {
+  var fragment = document.createDocumentFragment();
+  var element = document.querySelector('#card-order')
+                        .content.querySelector('.goods_card')
+                        .cloneNode(true);
+
+  element.querySelector('.card-order__title').textContent = object.name;
+  element.querySelector('.card-order__img').src = object.picture;
+  element.querySelector('.card-order__img').alt = object.name;
+  element.querySelector('.card-order__price').textContent = object.orderedAmount * object.price + ' ₽';
+  element.querySelector('.card-order__count').value = object.orderedAmount;
+  element.setAttribute('data-id', object.id);
+
+  element.addEventListener('click', function (evt) {
+    onCartElementClick(evt);
+  });
+
+  fragment.appendChild(element);
+
+  return fragment;
+}
 
 function createCartObject(object) {
   var cartObject = Object.assign({}, object);
@@ -338,130 +390,48 @@ function createCartObject(object) {
   return cartObject;
 }
 
-function createCartElement(object) {
-  var fragment = document.createDocumentFragment();
-  var element = document.querySelector('#card-order')
-                        .content.querySelector('.goods_card')
-                        .cloneNode(true);
-
-  element.querySelector('.card-order__title').textContent = object.name;
-  element.querySelector('.card-order__img').src = object.picture;
-  element.querySelector('.card-order__img').alt = object.name;
-  element.querySelector('.card-order__price').textContent = object.price + ' ₽';
-  element.querySelector('.card-order__count').value = object.orderedAmount;
-  element.setAttribute('data-id', object.id);
-
-  element.addEventListener('click', function (evt) {
-    onCartElementClick(evt, object, element);
-  });
-
-  fragment.appendChild(element);
-
-  return fragment;
-}
-
-function onCartElementClick(evt, object, element) {
-  var catalogObject = catalogObjects[object.id];
-  var cartObject = findObjectByName(cartObjects, object.name); // name
-  var catalogElement = document.querySelector('.catalog__card[data-id="' + object.id + '"]');
-
-  if (evt.target.classList.contains('card-order__btn--increase')) {
-    updateAmountInObjects(catalogObject, cartObject, true);
-  } else if (evt.target.classList.contains('card-order__btn--decrease')) {
-    updateAmountInObjects(catalogObject, cartObject, false);
-    if (object.orderedAmount === 0) {
-      removeCartElement(element, object);
-      removeCartObject(cartObject);
-    }
-  } else if (evt.target.classList.contains('card-order__close')) {
-    evt.preventDefault();
-    removeCartElement(element, object);
-    removeCartObject(cartObject);
-  }
-
-  element.querySelector('.card-order__price').textContent = object.orderedAmount * object.price + ' ₽';
-  element.querySelector('.card-order__count').value = object.orderedAmount;
-  setAmountClass(catalogObject, catalogElement);
-}
-
-// исправить: при добавлении более одного объекта не пересчитывается цена
-function onCardButtonClick(evt) {
-  evt.preventDefault();
-  evt.target.blur();
-  var id = Number(evt.target.closest('.catalog__card ').getAttribute('data-id'));
-  var cartObject = createCartObject(catalogObjects[id]);
-  setCartObjectInArray(cartObject);
-  addElementToCart(cartObject);
-}
-
-function removeCartElement(element, object) {
-  catalogObjects[object.id].amount += object.orderedAmount;
-  if (element.parentElement.children.length < 3) {
-    showEmptyCartStatus();
-  }
-  element.parentElement.removeChild(element);
-}
-
-function removeCartObject(cartObject) {
-  cartObjects.splice(findObjectByName(cartObjects, cartObject.name), 1); // name
-}
-
-// isIncrease: true или false, в зависимости от того, добавляем или удаляем объекты в корзину
-function updateAmountInObjects(catalogObject, cartObject, isIncrease) {
-  if (isIncrease && catalogObject.amount > 0) {
-    cartObject.orderedAmount++;
-    catalogObject.amount--;
-  }
-  if (!isIncrease && cartObject.orderedAmount > 0) {
-    cartObject.orderedAmount--;
-    catalogObject.amount++;
+function setCartStatus(cartBlock) {
+  if (cartBlock.children.length > 1) {
+    cartBlock.classList.remove('goods__cards--empty');
+    cartBlock.querySelector('.goods__card-empty').style.display = 'none';
+  } else {
+    cartBlock.classList.add('goods__cards--empty');
+    cartBlock.querySelector('.goods__card-empty').style.display = 'block';
   }
 }
 
-function addElementToCart(object) {
-
-  var cart = document.querySelector('.goods__cards');
-  var cartObject = findObjectByName(cartObjects, object.name); // если не найти этот объект, то у него не перезаписывается кол-во
-  var catalogObject = catalogObjects[object.id];
-  var cartElement = document.querySelector('.goods_card[data-id="' + object.id + '"]');
-  var catalogElement = document.querySelector('.catalog__card[data-id="' + object.id + '"]');
-
-  if (catalogObject.amount > 0) {
-    if (cart.children.length === 1) {
-      hideEmptyCartStatus();
-    }
-    if (cartElement === null) {
-      appendElements(createCartElement(object), cart);
+function addObjectToCart(id) {
+  if (catalogObjects[id].amount > 0) {
+    catalogObjects[id].amount--;
+    if (cart.ids.indexOf(id) === -1) {
+      cart.ids.push(id);
+      cart.items[id] = createCartObject(catalogObjects[id]);
     } else {
-      cartElement.querySelector('.card-order__count').value++;
-      updateAmountInObjects(catalogObject, cartObject, true);
+      cart.items[id].orderedAmount++;
     }
-  }
-  setAmountClass(catalogObject, catalogElement);
-}
-
-function setCartObjectInArray(cartObject) {
-  if (!isObjectInArray(cartObjects, cartObject)) {
-    cartObjects.push(cartObject);
   }
 }
 
-function isObjectInArray(array, object) {
-  var flag = false;
-  for (var i = 0; i < array.length; i++) {
-    if (array[i].id === object.id) {
-      flag = true;
-    }
+function removeObjectFromCart(id) {
+  if (cart.items[id].orderedAmount === 1) {
+    removeAllObjectsFromCart(id);
+  } else {
+    cart.items[id].orderedAmount--;
+    catalogObjects[id].amount++;
   }
-  return flag;
 }
 
-function findObjectByName(array, name) { // name
-  var object;
-  for (var i = 0; i < array.length; i++) {
-    if (array[i].name === name) {
-      object = array[i];
-    }
+function removeAllObjectsFromCart(id) {
+  catalogObjects[id].amount += cart.items[id].orderedAmount;
+  cart.ids.splice(cart.ids.indexOf(id), 1);
+  delete cart.items[id];
+}
+
+function setHeaderCartStatus(itemsAmount, itemsPrice) {
+  var headerOrderBlock = document.querySelector('.main-header__basket');
+  if (!itemsAmount) {
+    headerOrderBlock.textContent = 'В корзине ничего нет';
+  } else {
+    headerOrderBlock.textContent = 'Товара в корзине: ' + itemsAmount + ' шт. на сумму: ' + itemsPrice + ' ₽';
   }
-  return object;
 }

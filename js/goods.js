@@ -110,6 +110,7 @@ var RANGE_FILTER_MAX = 100;
 var TOTAL_ITEMS = 26;
 var catalogObjects = generateObjects(TOTAL_ITEMS);
 var catalogBlock = document.querySelector('.catalog__cards');
+
 var cardNumber = document.querySelector('#payment__card-number'); // #17
 var cardDate = document.querySelector('#payment__card-date'); // #17
 var cardCVC = document.querySelector('#payment__card-cvc'); // #17

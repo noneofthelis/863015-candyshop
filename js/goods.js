@@ -111,6 +111,12 @@ var TOTAL_ITEMS = 26;
 var catalogObjects = generateObjects(TOTAL_ITEMS);
 var catalogBlock = document.querySelector('.catalog__cards');
 
+var cardNumber = document.querySelector('#payment__card-number'); // #17
+var cardDate = document.querySelector('#payment__card-date'); // #17
+var cardCVC = document.querySelector('#payment__card-cvc'); // #17
+var cardHolderName = document.querySelector('#payment__cardholder'); // #17
+var customValidityMessage = ''; // #17
+
 var cart = {
   ids: [],
   items: {}
@@ -228,6 +234,13 @@ function initHandlers() {
   document.querySelector('.deliver').addEventListener('click', onInputClick); // 3.
   document.querySelector('.payment__inner').addEventListener('click', onInputClick); // 3.
   document.querySelector('.catalog__filter.range').addEventListener('mouseup', onRangeFilterMouseUp); // 4.
+  cardNumber.addEventListener('change', onCardNumberInputChange); // #17
+  cardDate.addEventListener('keyup', onCardDateInputKeyup); // #17
+  cardDate.addEventListener('change', onCardDateInputChange); // #17
+  cardCVC.addEventListener('change', onCVCInputChange); // #17
+  cardHolderName.addEventListener('change', onCardHolderNameChange); // #17
+  document.querySelector('.buy form').addEventListener('change', onFormValueChange); // #17
+  document.querySelector('#deliver__floor').addEventListener('change', onDeliverFloorInputChange); // #17
 }
 
 // 3.
@@ -328,16 +341,18 @@ function onCartElementClick(evt) {
 }
 
 function onCardButtonClick(evt) {
-  evt.preventDefault();
-  evt.target.blur();
+  if (evt.target.classList.contains('card__btn')) {
+    evt.preventDefault();
+    evt.target.blur();
 
-  var item = evt.target.closest('.catalog__card ');
-  var id = Number(item.getAttribute('data-id'));
+    var item = evt.target.closest('.catalog__card ');
+    var id = Number(item.getAttribute('data-id'));
 
-  addObjectToCart(id);
-  renderCart();
-  setAmountClass(catalogObjects[id], item);
-  setOrderFormAbitily();
+    addObjectToCart(id);
+    renderCart();
+    setAmountClass(catalogObjects[id], item);
+    setOrderFormAbitily();
+  }
 }
 
 function renderCart() {
@@ -449,4 +464,141 @@ function setOrderFormAbitily() { // пункт 7.3 в ТЗ
     inputs[i].disabled = cartEmptyStatus;
     submitButton.disabled = cartEmptyStatus;
   }
+}
+
+// #17
+
+function onFormValueChange() {
+  setCardStatus();
+}
+
+function onCVCInputChange(evt) {
+  checkCVCValidity(evt.target);
+}
+
+function onDeliverFloorInputChange(evt) {
+  checkIfDigits(evt.target);
+}
+
+function onCardDateInputKeyup(evt) {
+  insertForwardSlash(evt.target);
+}
+
+function onCardDateInputChange(evt) {
+  checkCardDateInputValidity(evt.target);
+}
+
+function onCardNumberInputChange(evt) {
+  checkCardNumberValidity(evt.target);
+}
+
+function onCardHolderNameChange(evt) {
+  checkCardHolderNameValidity(evt.target);
+}
+
+function setCardStatus() {
+  var status = cardNumber.validity.valid &&
+               cardDate.validity.valid &&
+               cardCVC.validity.valid &&
+               cardHolderName.validity.valid ? 'Одобрен' : 'Не определён';
+  document.querySelector('.payment__card-status').textContent = status;
+}
+
+function checkCVCValidity(input) {
+  var isValidFirstChar = Number(input.value[0]) > 0;
+  if (input.validity.tooShort || input.validity.tooLong || input.validity.patternMismatch || !isValidFirstChar) {
+    customValidityMessage = 'Поле должно содержать 3 цифры от 100 до 999';
+  } else if (input.validity.valueMissing) {
+    customValidityMessage = 'Поле обязательно к заполнению';
+  } else {
+    customValidityMessage = '';
+  }
+  input.setCustomValidity(customValidityMessage);
+}
+
+function checkIfDigits(input) {
+  if (input.validity.patternMismatch) {
+    customValidityMessage = 'Поле должно содержать только цифры';
+  } else {
+    customValidityMessage = '';
+  }
+  input.setCustomValidity(customValidityMessage);
+}
+
+function insertForwardSlash(input) {
+  if (input.value.length === 2) {
+    input.value += '/';
+  }
+}
+
+function checkDateError(input) {
+  var date = input.value.split('/', 2);
+  var month = Number(date[0]);
+  var year = Number(date[1]);
+  var currentMonth = new Date().getMonth() + 1;
+  var currentYear = new Date().getFullYear() % 100;
+  if (isNaN(month) || isNaN(year)) {
+    customValidityMessage = 'Введите данные в числовом формате';
+  } else if (month < 1 || month > 12) {
+    customValidityMessage = 'Введенный формат даты некорректен';
+  } else if ((year < currentYear) || (month < currentMonth && year === currentYear)) {
+    customValidityMessage = 'Ваша карта просрочена';
+  } else {
+    customValidityMessage = '';
+  }
+  return customValidityMessage;
+}
+
+function checkCardDateInputValidity(input) {
+  if (checkDateError(input)) {
+    customValidityMessage = checkDateError(input);
+  } else if (input.validity.valueMissing) {
+    customValidityMessage = 'Поле обязательно к заполнению';
+  } else if (input.validity.patternMismatch) {
+    customValidityMessage = 'Введите месяц и год окончания действия карты в формате мм/гг';
+  } else {
+    customValidityMessage = '';
+  }
+  input.setCustomValidity(customValidityMessage);
+}
+
+function checkCardHolderNameValidity(input) {
+  if (input.validity.patternMismatch) {
+    customValidityMessage = 'Поле должно содержать только буквы латинского алфавита';
+  } else if (input.validity.valueMissing) {
+    customValidityMessage = 'Поле обязательно к заполнению';
+  } else {
+    customValidityMessage = '';
+  }
+  input.setCustomValidity(customValidityMessage);
+}
+
+function checkCardNumberValidity(input) {
+  if (input.validity.tooShort || input.validity.tooLong || input.validity.patternMismatch) {
+    customValidityMessage = 'Поле должно состоять из 16 цифр';
+  } else if (input.validity.valueMissing) {
+    customValidityMessage = 'Поле обязательно к заполнению';
+  } else if (!luhnAlgorithmCardCheck(input.value)) {
+    customValidityMessage = 'Проверьте правильность введенного номера';
+  } else {
+    customValidityMessage = '';
+  }
+  input.setCustomValidity(customValidityMessage);
+  return customValidityMessage;
+}
+
+function luhnAlgorithmCardCheck(cardSerialNumber) {
+  var numbers = cardSerialNumber.split('');
+  var sum = 0;
+  for (var i = 0; i < numbers.length; i++) {
+    var digit = Number(numbers[i]);
+    if (i % 2 === 0) {
+      digit *= 2;
+      if (digit > 9) {
+        digit -= 9;
+      }
+    }
+    sum += digit;
+  }
+  return sum % 10 === 0;
 }

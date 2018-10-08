@@ -591,8 +591,6 @@ leftRangeButton.addEventListener('mousedown', onRangeFilterMouseDown);
 rightRangeButton.addEventListener('mousedown', onRangeFilterMouseDown);
 
 function onRangeFilterMouseDown(evt) {
-  console.log('MouseDown!');
-
   document.addEventListener('mouseup', onRangeFilterMouseUp); // 4.
   document.addEventListener('mousemove', onRangeFilterMouseMove);
 
@@ -603,18 +601,19 @@ function onRangeFilterMouseDown(evt) {
 
     var shiftX = startCoordX - moveEvt.clientX;
     startCoordX = moveEvt.clientX;
+
     var elementPosition = element.offsetLeft - shiftX;
     var maxPosition = {
-      left: 0, // rangeFilter.offsetLeft - element.clientWidth,
+      left: 0,
       right: rangeFilter.clientWidth - element.clientWidth
     };
 
     if (element.classList.contains('range__btn--right')) {
       maxPosition.left = leftRangeButton.offsetLeft;
-      rangeLine.style.right = (maxPosition.right - elementPosition) + 'px';
+      rangeLine.style.right = (maxPosition.right - elementPosition + element.clientWidth / 2) + 'px';
     } else if (element.classList.contains('range__btn--left')) {
       maxPosition.right = rightRangeButton.offsetLeft;
-      rangeLine.style.left = elementPosition + 'px';
+      rangeLine.style.left = (elementPosition + element.clientWidth / 2) + 'px';
     }
 
     if (elementPosition <= maxPosition.left) {
@@ -626,9 +625,8 @@ function onRangeFilterMouseDown(evt) {
     element.style.left = elementPosition + 'px';
   }
 
-  function onRangeFilterMouseUp(upEvt) {
-    console.log('MouseUp!');
-    setRangePrice(upEvt.target);
+  function onRangeFilterMouseUp() {
+    setRangePrice(evt.target);
     document.removeEventListener('mouseup', onRangeFilterMouseUp);
     document.removeEventListener('mousemove', onRangeFilterMouseMove);
   }
@@ -637,10 +635,9 @@ function onRangeFilterMouseDown(evt) {
 // 4.
 
 function setRangePrice(element) {
-  // var rangePriceParent = element.parentElement.nextElementSibling;
   var rangePrice = document.querySelector('.range__price--min');
   var elementWidth = 0;
-  if (element !== element.parentElement.firstElementChild) {
+  if (element.classList.contains('range__btn--right')) {
     rangePrice = document.querySelector('.range__price--max');
     elementWidth = element.clientWidth;
   }
@@ -648,7 +645,5 @@ function setRangePrice(element) {
 }
 
 function calculatePercent(element, shift) {
-  console.log((element.offsetLeft / rangeFilter.clientWidth).toFixed(2));
   return ((element.offsetLeft + shift) / element.parentElement.clientWidth).toFixed(2);
 }
-

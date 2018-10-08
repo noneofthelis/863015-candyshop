@@ -1266,6 +1266,7 @@ body {
   padding: 0;
   font-size: 0;
   border-radius: 50%;
+  z-index: 1;
 }
 .range__btn--left {
   left: 15%;
@@ -1280,6 +1281,7 @@ body {
   right: 15%;
   top: 3px;
   height: 4px;
+  z-index: 0;
 }
 .range__prices {
   display: flex;

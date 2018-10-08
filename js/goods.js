@@ -233,7 +233,6 @@ function initHandlers() {
   catalogBlock.addEventListener('click', onCardButtonClick); // 2.
   document.querySelector('.deliver').addEventListener('click', onInputClick); // 3.
   document.querySelector('.payment__inner').addEventListener('click', onInputClick); // 3.
-  document.querySelector('.catalog__filter.range').addEventListener('mouseup', onRangeFilterMouseUp); // 4.
   cardNumber.addEventListener('change', onCardNumberInputChange); // #17
   cardDate.addEventListener('keyup', onCardDateInputKeyup); // #17
   cardDate.addEventListener('change', onCardDateInputChange); // #17
@@ -297,28 +296,7 @@ function toggleFavouriteClass(evt) {
   evt.target.classList.toggle('card__btn-favorite--selected');
 }
 
-// 4.
 
-function onRangeFilterMouseUp(evt) {
-  if (evt.target.tagName === 'BUTTON') {
-    setRangePrice(evt.target);
-  }
-}
-
-function setRangePrice(element) {
-  var rangePriceParent = element.parentElement.nextElementSibling;
-  var rangePrice = rangePriceParent.firstElementChild;
-  var elementWidth = 0;
-  if (element !== element.parentElement.firstElementChild) {
-    rangePrice = rangePriceParent.lastElementChild;
-    elementWidth = element.clientWidth;
-  }
-  rangePrice.textContent = (RANGE_FILTER_MAX - RANGE_FILTER_MIN) * calculatePercent(element, elementWidth);
-}
-
-function calculatePercent(element, shift) {
-  return ((element.offsetLeft + shift) / element.parentElement.clientWidth).toFixed(2);
-}
 
 // 2.
 
@@ -584,7 +562,6 @@ function checkCardNumberValidity(input) {
     customValidityMessage = '';
   }
   input.setCustomValidity(customValidityMessage);
-  return customValidityMessage;
 }
 
 function luhnAlgorithmCardCheck(cardSerialNumber) {
@@ -602,3 +579,76 @@ function luhnAlgorithmCardCheck(cardSerialNumber) {
   }
   return sum % 10 === 0;
 }
+
+// #19
+
+var rangeFilter = document.querySelector('.catalog__filter.range');
+var rightRangeButton = document.querySelector('.range__btn--right');
+var leftRangeButton = document.querySelector('.range__btn--left');
+var rangeLine = document.querySelector('.range__fill-line');
+
+leftRangeButton.addEventListener('mousedown', onRangeFilterMouseDown);
+rightRangeButton.addEventListener('mousedown', onRangeFilterMouseDown);
+
+function onRangeFilterMouseDown(evt) {
+  console.log('MouseDown!');
+
+  document.addEventListener('mouseup', onRangeFilterMouseUp); // 4.
+  document.addEventListener('mousemove', onRangeFilterMouseMove);
+
+  var element = evt.target;
+  var startCoordX = evt.clientX;
+
+  function onRangeFilterMouseMove(moveEvt) {
+
+    var shiftX = startCoordX - moveEvt.clientX;
+    startCoordX = moveEvt.clientX;
+    var elementPosition = element.offsetLeft - shiftX;
+    var maxPosition = {
+      left: 0, // rangeFilter.offsetLeft - element.clientWidth,
+      right: rangeFilter.clientWidth - element.clientWidth
+    };
+
+    if (element.classList.contains('range__btn--right')) {
+      maxPosition.left = leftRangeButton.offsetLeft;
+      rangeLine.style.right = (maxPosition.right - elementPosition) + 'px';
+    } else if (element.classList.contains('range__btn--left')) {
+      maxPosition.right = rightRangeButton.offsetLeft;
+      rangeLine.style.left = elementPosition + 'px';
+    }
+
+    if (elementPosition <= maxPosition.left) {
+      elementPosition = maxPosition.left;
+    } else if (elementPosition >= maxPosition.right) {
+      elementPosition = maxPosition.right;
+    }
+
+    element.style.left = elementPosition + 'px';
+  }
+
+  function onRangeFilterMouseUp(upEvt) {
+    console.log('MouseUp!');
+    setRangePrice(upEvt.target);
+    document.removeEventListener('mouseup', onRangeFilterMouseUp);
+    document.removeEventListener('mousemove', onRangeFilterMouseMove);
+  }
+}
+
+// 4.
+
+function setRangePrice(element) {
+  // var rangePriceParent = element.parentElement.nextElementSibling;
+  var rangePrice = document.querySelector('.range__price--min');
+  var elementWidth = 0;
+  if (element !== element.parentElement.firstElementChild) {
+    rangePrice = document.querySelector('.range__price--max');
+    elementWidth = element.clientWidth;
+  }
+  rangePrice.textContent = (RANGE_FILTER_MAX - RANGE_FILTER_MIN) * calculatePercent(element, elementWidth);
+}
+
+function calculatePercent(element, shift) {
+  console.log((element.offsetLeft / rangeFilter.clientWidth).toFixed(2));
+  return ((element.offsetLeft + shift) / element.parentElement.clientWidth).toFixed(2);
+}
+

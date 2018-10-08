@@ -296,8 +296,6 @@ function toggleFavouriteClass(evt) {
   evt.target.classList.toggle('card__btn-favorite--selected');
 }
 
-
-
 // 2.
 
 function onCartElementClick(evt) {

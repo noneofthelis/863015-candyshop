@@ -626,7 +626,7 @@ function onRangeFilterMouseDown(evt) {
   }
 
   function onRangeFilterMouseUp() {
-    setRangePrice(evt.target);
+    setRangePrice(element);
     document.removeEventListener('mouseup', onRangeFilterMouseUp);
     document.removeEventListener('mousemove', onRangeFilterMouseMove);
   }

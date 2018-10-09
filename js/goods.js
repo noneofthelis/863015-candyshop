@@ -117,6 +117,11 @@ var cardCVC = document.querySelector('#payment__card-cvc'); // #17
 var cardHolderName = document.querySelector('#payment__cardholder'); // #17
 var customValidityMessage = ''; // #17
 
+var rangeFilter = document.querySelector('.catalog__filter.range'); // #19
+var rightRangeButton = document.querySelector('.range__btn--right'); // #19
+var leftRangeButton = document.querySelector('.range__btn--left'); // #19
+var rangeLine = document.querySelector('.range__fill-line'); // #19
+
 var cart = {
   ids: [],
   items: {}
@@ -125,6 +130,8 @@ var cart = {
 hideCatalogLoadStatus();
 appendElements(createElements(catalogObjects), catalogBlock);
 setOrderFormAbitily();
+setRangePrice(rightRangeButton);
+setRangePrice(leftRangeButton);
 initHandlers();
 
 function appendElements(elements, container) {
@@ -240,6 +247,8 @@ function initHandlers() {
   cardHolderName.addEventListener('change', onCardHolderNameChange); // #17
   document.querySelector('.buy form').addEventListener('change', onFormValueChange); // #17
   document.querySelector('#deliver__floor').addEventListener('change', onDeliverFloorInputChange); // #17
+  leftRangeButton.addEventListener('mousedown', onRangeFilterMouseDown); // #19
+  rightRangeButton.addEventListener('mousedown', onRangeFilterMouseDown); // #19
 }
 
 // 3.
@@ -580,14 +589,6 @@ function luhnAlgorithmCardCheck(cardSerialNumber) {
 
 // #19
 
-var rangeFilter = document.querySelector('.catalog__filter.range');
-var rightRangeButton = document.querySelector('.range__btn--right');
-var leftRangeButton = document.querySelector('.range__btn--left');
-var rangeLine = document.querySelector('.range__fill-line');
-
-leftRangeButton.addEventListener('mousedown', onRangeFilterMouseDown);
-rightRangeButton.addEventListener('mousedown', onRangeFilterMouseDown);
-
 function onRangeFilterMouseDown(evt) {
   document.addEventListener('mouseup', onRangeFilterMouseUp); // 4.
   document.addEventListener('mousemove', onRangeFilterMouseMove);
@@ -596,31 +597,14 @@ function onRangeFilterMouseDown(evt) {
   var startCoordX = evt.clientX;
 
   function onRangeFilterMouseMove(moveEvt) {
-
     var shiftX = startCoordX - moveEvt.clientX;
-    startCoordX = moveEvt.clientX;
-
-    var elementPosition = element.offsetLeft - shiftX;
     var maxPosition = {
       left: 0,
       right: rangeFilter.clientWidth - element.clientWidth
     };
+    startCoordX = moveEvt.clientX;
 
-    if (element.classList.contains('range__btn--right')) {
-      maxPosition.left = leftRangeButton.offsetLeft;
-      rangeLine.style.right = (maxPosition.right - elementPosition + element.clientWidth / 2) + 'px';
-    } else if (element.classList.contains('range__btn--left')) {
-      maxPosition.right = rightRangeButton.offsetLeft;
-      rangeLine.style.left = (elementPosition + element.clientWidth / 2) + 'px';
-    }
-
-    if (elementPosition <= maxPosition.left) {
-      elementPosition = maxPosition.left;
-    } else if (elementPosition >= maxPosition.right) {
-      elementPosition = maxPosition.right;
-    }
-
-    element.style.left = elementPosition + 'px';
+    calculateRangeButtonPosition(element, shiftX, maxPosition);
   }
 
   function onRangeFilterMouseUp() {
@@ -628,6 +612,25 @@ function onRangeFilterMouseDown(evt) {
     document.removeEventListener('mouseup', onRangeFilterMouseUp);
     document.removeEventListener('mousemove', onRangeFilterMouseMove);
   }
+}
+
+function calculateRangeButtonPosition(element, shift, maxPosition) {
+  var elementPosition = element.offsetLeft - shift;
+  if (element.classList.contains('range__btn--right')) {
+    maxPosition.left = leftRangeButton.offsetLeft;
+    rangeLine.style.right = (maxPosition.right - elementPosition + element.clientWidth / 2) + 'px';
+  } else {
+    maxPosition.right = rightRangeButton.offsetLeft;
+    rangeLine.style.left = (elementPosition + element.clientWidth / 2) + 'px';
+  }
+
+  if (elementPosition <= maxPosition.left) {
+    elementPosition = maxPosition.left;
+  } else if (elementPosition >= maxPosition.right) {
+    elementPosition = maxPosition.right;
+  }
+
+  element.style.left = elementPosition + 'px';
 }
 
 // 4.

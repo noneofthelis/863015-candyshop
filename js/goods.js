@@ -115,12 +115,15 @@ var cardNumber = document.querySelector('#payment__card-number'); // #17
 var cardDate = document.querySelector('#payment__card-date'); // #17
 var cardCVC = document.querySelector('#payment__card-cvc'); // #17
 var cardHolderName = document.querySelector('#payment__cardholder'); // #17
+var cardStatus = document.querySelector('.payment__card-status'); // #17
 var customValidityMessage = ''; // #17
 
 var rangeFilter = document.querySelector('.catalog__filter.range'); // #19
-var rightRangeButton = document.querySelector('.range__btn--right'); // #19
-var leftRangeButton = document.querySelector('.range__btn--left'); // #19
-var rangeLine = document.querySelector('.range__fill-line'); // #19
+var rightRangeButton = rangeFilter.querySelector('.range__btn--right'); // #19
+var leftRangeButton = rangeFilter.querySelector('.range__btn--left'); // #19
+var rangeLine = rangeFilter.querySelector('.range__fill-line'); // #19
+var rangePriceMin = rangeFilter.querySelector('.range__price--min'); //#19
+var rangePriceMax = rangeFilter.querySelector('.range__price--max');
 
 var cart = {
   ids: [],
@@ -241,7 +244,7 @@ function initHandlers() {
   document.querySelector('.deliver').addEventListener('click', onInputClick); // 3.
   document.querySelector('.payment__inner').addEventListener('click', onInputClick); // 3.
   cardNumber.addEventListener('change', onCardNumberInputChange); // #17
-  cardDate.addEventListener('keyup', onCardDateInputKeyup); // #17
+  cardDate.addEventListener('input', onCardDateInput); // #17
   cardDate.addEventListener('change', onCardDateInputChange); // #17
   cardCVC.addEventListener('change', onCVCInputChange); // #17
   cardHolderName.addEventListener('change', onCardHolderNameChange); // #17
@@ -465,7 +468,7 @@ function onDeliverFloorInputChange(evt) {
   checkIfDigits(evt.target);
 }
 
-function onCardDateInputKeyup(evt) {
+function onCardDateInput(evt) {
   insertForwardSlash(evt.target);
 }
 
@@ -486,7 +489,7 @@ function setCardStatus() {
                cardDate.validity.valid &&
                cardCVC.validity.valid &&
                cardHolderName.validity.valid ? 'Одобрен' : 'Не определён';
-  document.querySelector('.payment__card-status').textContent = status;
+  cardStatus.textContent = status;
 }
 
 function checkCVCValidity(input) {
@@ -636,15 +639,12 @@ function calculateRangeButtonPosition(element, shift, maxPosition) {
 // 4.
 
 function setRangePrice(element) {
-  var rangePrice = document.querySelector('.range__price--min');
+  var rangePrice = rangePriceMin;
   var elementWidth = 0;
   if (element.classList.contains('range__btn--right')) {
-    rangePrice = document.querySelector('.range__price--max');
+    rangePrice = rangePriceMax;
     elementWidth = element.clientWidth;
   }
-  rangePrice.textContent = (RANGE_FILTER_MAX - RANGE_FILTER_MIN) * calculatePercent(element, elementWidth);
-}
-
-function calculatePercent(element, shift) {
-  return ((element.offsetLeft + shift) / element.parentElement.clientWidth).toFixed(2);
+  var percent = (element.offsetLeft + elementWidth) / element.parentElement.clientWidth;
+  rangePrice.textContent = Math.round((RANGE_FILTER_MAX - RANGE_FILTER_MIN) * percent);
 }

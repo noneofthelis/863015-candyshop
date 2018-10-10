@@ -105,8 +105,6 @@ var ENERGY_MIN = 70;
 var ENERGY_MAX = 500;
 
 var ENTER_KEYCODE = 27;
-var RANGE_FILTER_MIN = 0;
-var RANGE_FILTER_MAX = 100;
 var TOTAL_ITEMS = 26;
 var catalogObjects = generateObjects(TOTAL_ITEMS);
 var catalogBlock = document.querySelector('.catalog__cards');
@@ -115,7 +113,15 @@ var cardNumber = document.querySelector('#payment__card-number'); // #17
 var cardDate = document.querySelector('#payment__card-date'); // #17
 var cardCVC = document.querySelector('#payment__card-cvc'); // #17
 var cardHolderName = document.querySelector('#payment__cardholder'); // #17
+var cardStatus = document.querySelector('.payment__card-status'); // #17
 var customValidityMessage = ''; // #17
+
+var rangeFilter = document.querySelector('.catalog__filter.range'); // #19
+var rightRangeButton = rangeFilter.querySelector('.range__btn--right'); // #19
+var leftRangeButton = rangeFilter.querySelector('.range__btn--left'); // #19
+var rangeLine = rangeFilter.querySelector('.range__fill-line'); // #19
+var rangePriceMin = rangeFilter.querySelector('.range__price--min'); // #19
+var rangePriceMax = rangeFilter.querySelector('.range__price--max');
 
 var cart = {
   ids: [],
@@ -125,6 +131,8 @@ var cart = {
 hideCatalogLoadStatus();
 appendElements(createElements(catalogObjects), catalogBlock);
 setOrderFormAbitily();
+setRangePrice(rightRangeButton);
+setRangePrice(leftRangeButton);
 initHandlers();
 
 function appendElements(elements, container) {
@@ -233,14 +241,15 @@ function initHandlers() {
   catalogBlock.addEventListener('click', onCardButtonClick); // 2.
   document.querySelector('.deliver').addEventListener('click', onInputClick); // 3.
   document.querySelector('.payment__inner').addEventListener('click', onInputClick); // 3.
-  document.querySelector('.catalog__filter.range').addEventListener('mouseup', onRangeFilterMouseUp); // 4.
   cardNumber.addEventListener('change', onCardNumberInputChange); // #17
-  cardDate.addEventListener('keyup', onCardDateInputKeyup); // #17
+  cardDate.addEventListener('input', onCardDateInput); // #17
   cardDate.addEventListener('change', onCardDateInputChange); // #17
   cardCVC.addEventListener('change', onCVCInputChange); // #17
   cardHolderName.addEventListener('change', onCardHolderNameChange); // #17
   document.querySelector('.buy form').addEventListener('change', onFormValueChange); // #17
   document.querySelector('#deliver__floor').addEventListener('change', onDeliverFloorInputChange); // #17
+  leftRangeButton.addEventListener('mousedown', onRangeFilterMouseDown); // #19
+  rightRangeButton.addEventListener('mousedown', onRangeFilterMouseDown); // #19
 }
 
 // 3.
@@ -295,29 +304,6 @@ function onFavouriteButtonPress(evt) {
 function toggleFavouriteClass(evt) {
   evt.preventDefault();
   evt.target.classList.toggle('card__btn-favorite--selected');
-}
-
-// 4.
-
-function onRangeFilterMouseUp(evt) {
-  if (evt.target.tagName === 'BUTTON') {
-    setRangePrice(evt.target);
-  }
-}
-
-function setRangePrice(element) {
-  var rangePriceParent = element.parentElement.nextElementSibling;
-  var rangePrice = rangePriceParent.firstElementChild;
-  var elementWidth = 0;
-  if (element !== element.parentElement.firstElementChild) {
-    rangePrice = rangePriceParent.lastElementChild;
-    elementWidth = element.clientWidth;
-  }
-  rangePrice.textContent = (RANGE_FILTER_MAX - RANGE_FILTER_MIN) * calculatePercent(element, elementWidth);
-}
-
-function calculatePercent(element, shift) {
-  return ((element.offsetLeft + shift) / element.parentElement.clientWidth).toFixed(2);
 }
 
 // 2.
@@ -480,7 +466,7 @@ function onDeliverFloorInputChange(evt) {
   checkIfDigits(evt.target);
 }
 
-function onCardDateInputKeyup(evt) {
+function onCardDateInput(evt) {
   insertForwardSlash(evt.target);
 }
 
@@ -501,7 +487,7 @@ function setCardStatus() {
                cardDate.validity.valid &&
                cardCVC.validity.valid &&
                cardHolderName.validity.valid ? 'Одобрен' : 'Не определён';
-  document.querySelector('.payment__card-status').textContent = status;
+  cardStatus.textContent = status;
 }
 
 function checkCVCValidity(input) {
@@ -584,7 +570,6 @@ function checkCardNumberValidity(input) {
     customValidityMessage = '';
   }
   input.setCustomValidity(customValidityMessage);
-  return customValidityMessage;
 }
 
 function luhnAlgorithmCardCheck(cardSerialNumber) {
@@ -601,4 +586,63 @@ function luhnAlgorithmCardCheck(cardSerialNumber) {
     sum += digit;
   }
   return sum % 10 === 0;
+}
+
+// #19
+
+function onRangeFilterMouseDown(evt) {
+  document.addEventListener('mouseup', onRangeFilterMouseUp); // 4.
+  document.addEventListener('mousemove', onRangeFilterMouseMove);
+
+  var element = evt.target;
+  var startCoordX = evt.clientX;
+
+  function onRangeFilterMouseMove(moveEvt) {
+    var shiftX = startCoordX - moveEvt.clientX;
+    var maxPosition = {
+      left: 0,
+      right: rangeFilter.clientWidth - element.clientWidth
+    };
+    startCoordX = moveEvt.clientX;
+
+    calculateRangeButtonPosition(element, shiftX, maxPosition);
+  }
+
+  function onRangeFilterMouseUp() {
+    setRangePrice(element);
+    document.removeEventListener('mouseup', onRangeFilterMouseUp);
+    document.removeEventListener('mousemove', onRangeFilterMouseMove);
+  }
+}
+
+function calculateRangeButtonPosition(element, shift, maxPosition) {
+  var elementPosition = element.offsetLeft - shift;
+  if (element.classList.contains('range__btn--right')) {
+    maxPosition.left = leftRangeButton.offsetLeft;
+    rangeLine.style.right = (maxPosition.right - elementPosition + element.clientWidth / 2) + 'px';
+  } else {
+    maxPosition.right = rightRangeButton.offsetLeft;
+    rangeLine.style.left = (elementPosition + element.clientWidth / 2) + 'px';
+  }
+
+  if (elementPosition <= maxPosition.left) {
+    elementPosition = maxPosition.left;
+  } else if (elementPosition >= maxPosition.right) {
+    elementPosition = maxPosition.right;
+  }
+
+  element.style.left = elementPosition + 'px';
+}
+
+// 4.
+
+function setRangePrice(element) {
+  var rangePrice = rangePriceMin;
+  var elementWidth = 0;
+  if (element.classList.contains('range__btn--right')) {
+    rangePrice = rangePriceMax;
+    elementWidth = element.clientWidth;
+  }
+  var percent = (element.offsetLeft + elementWidth) / element.parentElement.clientWidth;
+  rangePrice.textContent = Math.round((PRICE_MAX - PRICE_MIN) * percent + PRICE_MIN);
 }

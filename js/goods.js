@@ -105,8 +105,6 @@ var ENERGY_MIN = 70;
 var ENERGY_MAX = 500;
 
 var ENTER_KEYCODE = 27;
-var RANGE_FILTER_MIN = 0;
-var RANGE_FILTER_MAX = 100;
 var TOTAL_ITEMS = 26;
 var catalogObjects = generateObjects(TOTAL_ITEMS);
 var catalogBlock = document.querySelector('.catalog__cards');
@@ -122,7 +120,7 @@ var rangeFilter = document.querySelector('.catalog__filter.range'); // #19
 var rightRangeButton = rangeFilter.querySelector('.range__btn--right'); // #19
 var leftRangeButton = rangeFilter.querySelector('.range__btn--left'); // #19
 var rangeLine = rangeFilter.querySelector('.range__fill-line'); // #19
-var rangePriceMin = rangeFilter.querySelector('.range__price--min'); //#19
+var rangePriceMin = rangeFilter.querySelector('.range__price--min'); // #19
 var rangePriceMax = rangeFilter.querySelector('.range__price--max');
 
 var cart = {
@@ -646,5 +644,5 @@ function setRangePrice(element) {
     elementWidth = element.clientWidth;
   }
   var percent = (element.offsetLeft + elementWidth) / element.parentElement.clientWidth;
-  rangePrice.textContent = Math.round((RANGE_FILTER_MAX - RANGE_FILTER_MIN) * percent);
+  rangePrice.textContent = Math.round((PRICE_MAX - PRICE_MIN) * percent + PRICE_MIN);
 }

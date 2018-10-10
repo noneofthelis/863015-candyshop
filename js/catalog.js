@@ -2,11 +2,12 @@
 
 //catalog.js — модуль, который работает с карточками товаров и корзиной
 
-(function (){
+(function () {
 
+  var PATH = 'img/cards/';
   var ENTER_KEYCODE = 27;
   var RATING_CLASS_PREFIX = 'stars__rating--';
-  
+
   var NUMBERS_IN_WRITTEN = [
     'one',
     'two',
@@ -14,7 +15,7 @@
     'four',
     'five'
   ];
-  
+
   var cart = {
     ids: [],
     items: {}
@@ -22,7 +23,7 @@
 
   var catalogBlock = document.querySelector('.catalog__cards');
 
-  appendElements(createElements(catalogObjects), catalogBlock);
+  appendElements(createElements(window.catalogObjects), catalogBlock);
   hideCatalogLoadStatus();
   initHandlers();
 
@@ -41,7 +42,7 @@
       price.firstChild.data = object.price + ' ';
       price.lastElementChild.textContent = '/ ' + object.weight + ' Г';
       element.querySelector('.card__title').textContent = object.name;
-      element.querySelector('.card__img').src = object.picture;
+      element.querySelector('.card__img').src = PATH + object.picture;
       element.querySelector('.card__img').alt = object.name;
       element.querySelector('.stars__rating').classList.remove('stars__rating--five');
       element.querySelector('.stars__rating').classList.add(setRatingClass(object));
@@ -240,10 +241,10 @@
     catalogBlock.addEventListener('keydown', onFavouriteButtonPress);
     catalogBlock.addEventListener('click', onCardButtonClick);
   }
-  
+
   function hideCatalogLoadStatus() {
     catalogBlock.classList.remove('catalog__cards--load');
     catalogBlock.querySelector('.catalog__load').classList.add('visually-hidden');
   }
-  
+
 })();

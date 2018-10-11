@@ -27,11 +27,16 @@
   // А получение данных надо изначально вызывать из модуля каталога.
   window.backend.getData(onGetDataSuccess, onGetDataError);
 
+  window.catalog = {
+    appendElements: appendElements,
+    createElements: createElements
+  };
+
   function onGetDataSuccess(data) {
     window.catalogObjects = updateObjects(data);
     hideCatalogLoadStatus();
     setOrderFormAbitily();
-    appendElements(createElements(window.catalogObjects), catalogBlock);
+    // appendElements(createElements(window.catalogObjects), catalogBlock);
   }
 
   function onGetDataError(data) {

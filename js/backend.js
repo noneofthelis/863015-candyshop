@@ -4,6 +4,7 @@
 
   var GET_URL = ' https://js.dump.academy/candyshop/data';
   var POST_URL = 'https://js.dump.academy/candyshop';
+  var catalogBlock = document.querySelector('.catalog__cards');
 
   function getData(onLoad, onError) {
     var xhr = new XMLHttpRequest();
@@ -12,6 +13,8 @@
     xhr.addEventListener('load', function () {
       if (xhr.status === 200) {
         onLoad(xhr.response);
+        // Значит из модуля получения данных нужно вызвать метод отрисовки каталога, когда данные получены.
+        window.catalog.appendElements(window.catalog.createElements(window.catalogObjects), catalogBlock);
       } else {
         onError('Код ошибки: ' + xhr.status + ' ' + xhr.statusText);
       }

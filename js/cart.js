@@ -49,11 +49,11 @@
   }
 
   function addObjectToCart(id) {
-    if (window.catalogObjects[id].amount > 0) {
-      window.catalogObjects[id].amount--;
+    if (window.catalog.catalogObjects[id].amount > 0) {
+      window.catalog.catalogObjects[id].amount--;
       if (cart.ids.indexOf(id) === -1) {
         cart.ids.push(id);
-        cart.items[id] = createCartObject(window.catalogObjects[id]);
+        cart.items[id] = createCartObject(window.catalog.catalogObjects[id]);
       } else {
         cart.items[id].orderedAmount++;
       }
@@ -65,12 +65,12 @@
       removeAllObjectsFromCart(id);
     } else {
       cart.items[id].orderedAmount--;
-      window.catalogObjects[id].amount++;
+      window.catalog.catalogObjects[id].amount++;
     }
   }
 
   function removeAllObjectsFromCart(id) {
-    window.catalogObjects[id].amount += cart.items[id].orderedAmount;
+    window.catalog.catalogObjects[id].amount += cart.items[id].orderedAmount;
     cart.ids.splice(cart.ids.indexOf(id), 1);
     delete cart.items[id];
   }
@@ -110,7 +110,7 @@
     }
 
     renderCart();
-    window.catalog.setAmountClass(window.catalogObjects[id], item);
+    window.catalog.setAmountClass(window.catalog.catalogObjects[id], item);
     setOrderFormAbitily();
   }
 

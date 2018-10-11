@@ -19,11 +19,12 @@
   initHandlers();
 
   function renderCatalog() {
-    appendElements(createElements(window.catalogObjects), catalogBlock);
+    appendElements(createElements(window.catalog.catalogObjects), catalogBlock);
   }
 
   function onGetDataSuccess(data) {
-    window.catalogObjects = updateObjects(data);
+    window.catalog.catalogObjects = updateObjects(data);
+    window.catalog.renderCatalog();
     hideCatalogLoadStatus();
     window.cart.setOrderFormAbitily();
   }
@@ -58,7 +59,7 @@
 
       window.cart.addObjectToCart(id);
       window.cart.renderCart();
-      setAmountClass(window.catalogObjects[id], item);
+      setAmountClass(window.catalog.catalogObjects[id], item);
       window.cart.setOrderFormAbitily();
     }
   }

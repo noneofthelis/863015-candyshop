@@ -12,7 +12,6 @@
     xhr.addEventListener('load', function () {
       if (xhr.status === 200) {
         onLoad(xhr.response);
-        window.catalog.renderCatalog();
       } else {
         onError('Код ошибки: ' + xhr.status + ' ' + xhr.statusText);
       }

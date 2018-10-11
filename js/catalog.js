@@ -1,6 +1,6 @@
 'use strict';
 
-//catalog.js — модуль, который работает с карточками товаров и корзиной
+// catalog.js — модуль, который работает с карточками товаров и корзиной
 
 (function () {
 
@@ -24,6 +24,7 @@
   var catalogBlock = document.querySelector('.catalog__cards');
 
   initHandlers();
+  // А получение данных надо изначально вызывать из модуля каталога.
   window.backend.getData(onGetDataSuccess, onGetDataError);
 
   function onGetDataSuccess(data) {

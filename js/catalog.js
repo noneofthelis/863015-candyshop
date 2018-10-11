@@ -23,9 +23,31 @@
 
   var catalogBlock = document.querySelector('.catalog__cards');
 
-  appendElements(createElements(window.catalogObjects), catalogBlock);
-  hideCatalogLoadStatus();
   initHandlers();
+  window.backend.getData(onGetDataSuccess, onGetDataError);
+
+  function onGetDataSuccess(data) {
+    window.catalogObjects = updateObjects(data);
+    hideCatalogLoadStatus();
+    setOrderFormAbitily();
+    appendElements(createElements(window.catalogObjects), catalogBlock);
+  }
+
+  function onGetDataError(data) {
+    renderErrorMessage(data);
+    window.modals.showErrorModal();
+  }
+
+  function renderErrorMessage(data) {
+    document.querySelector('.modal--error .modal__message').textContent = data;
+  }
+
+  function updateObjects(array) {
+    for (var i = 0; i < array.length; i++) {
+      array[i].id = i;
+    }
+    return array;
+  }
 
   function appendElements(elements, container) {
     container.appendChild(elements);
@@ -71,18 +93,18 @@
     }
 
     renderCart();
-    setAmountClass(catalogObjects[id], item);
+    setAmountClass(window.catalogObjects[id], item);
     setOrderFormAbitily();
   }
 
-    function createCartElement(object) {
+  function createCartElement(object) {
     var fragment = document.createDocumentFragment();
     var element = document.querySelector('#card-order')
                           .content.querySelector('.goods_card')
                           .cloneNode(true);
 
     element.querySelector('.card-order__title').textContent = object.name;
-    element.querySelector('.card-order__img').src = object.picture;
+    element.querySelector('.card-order__img').src = PATH + object.picture;
     element.querySelector('.card-order__img').alt = object.name;
     element.querySelector('.card-order__price').textContent = object.orderedAmount * object.price + ' ₽';
     element.querySelector('.card-order__count').value = object.orderedAmount;
@@ -118,7 +140,7 @@
 
       addObjectToCart(id);
       renderCart();
-      setAmountClass(catalogObjects[id], item);
+      setAmountClass(window.catalogObjects[id], item);
       setOrderFormAbitily();
     }
   }
@@ -154,11 +176,11 @@
   }
 
   function addObjectToCart(id) {
-    if (catalogObjects[id].amount > 0) {
-      catalogObjects[id].amount--;
+    if (window.catalogObjects[id].amount > 0) {
+      window.catalogObjects[id].amount--;
       if (cart.ids.indexOf(id) === -1) {
         cart.ids.push(id);
-        cart.items[id] = createCartObject(catalogObjects[id]);
+        cart.items[id] = createCartObject(window.catalogObjects[id]);
       } else {
         cart.items[id].orderedAmount++;
       }
@@ -170,12 +192,12 @@
       removeAllObjectsFromCart(id);
     } else {
       cart.items[id].orderedAmount--;
-      catalogObjects[id].amount++;
+      window.catalogObjects[id].amount++;
     }
   }
 
   function removeAllObjectsFromCart(id) {
-    catalogObjects[id].amount += cart.items[id].orderedAmount;
+    window.catalogObjects[id].amount += cart.items[id].orderedAmount;
     cart.ids.splice(cart.ids.indexOf(id), 1);
     delete cart.items[id];
   }

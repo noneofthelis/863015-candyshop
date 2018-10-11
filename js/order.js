@@ -4,25 +4,21 @@
 
 (function () {
 
-  var cardNumber = document.querySelector('#payment__card-number'); 
-  var cardDate = document.querySelector('#payment__card-date'); 
-  var cardCVC = document.querySelector('#payment__card-cvc');  
-  var cardHolderName = document.querySelector('#payment__cardholder'); 
-  var cardStatus = document.querySelector('.payment__card-status');
-  var customValidityMessage = ''; 
+  var MAP_IMG_PATH = 'img/map/';
+  var FILE_EXTENSION = '.jpg';
 
-  cardNumber.addEventListener('change', onCardNumberInputChange);
-  cardDate.addEventListener('input', onCardDateInput);
-  cardDate.addEventListener('change', onCardDateInputChange);
-  cardCVC.addEventListener('change', onCVCInputChange);
-  cardHolderName.addEventListener('change', onCardHolderNameChange);
-  document.querySelector('.buy form').addEventListener('change', onFormValueChange);
-  document.querySelector('#deliver__floor').addEventListener('change', onDeliverFloorInputChange);
-  document.querySelector('.deliver').addEventListener('click', onInputClick);
-  document.querySelector('.payment__inner').addEventListener('click', onInputClick);
+  var cardNumber = document.querySelector('#payment__card-number');
+  var cardDate = document.querySelector('#payment__card-date');
+  var cardCVC = document.querySelector('#payment__card-cvc');
+  var cardHolderName = document.querySelector('#payment__cardholder');
+  var cardStatus = document.querySelector('.payment__card-status');
+  var form = document.querySelector('.buy form');
+  var customValidityMessage = '';
+
+  initHandlerds();
 
   function onFormValueChange() {
-  setCardStatus();
+    setCardStatus();
   }
 
   function onCVCInputChange(evt) {
@@ -49,9 +45,48 @@
     checkCardHolderNameValidity(evt.target);
   }
 
+  function onFormSubmit(evt) {
+    sendData(evt);
+  }
+
   function onInputClick(evt) {
     if (evt.target.classList.contains('toggle-btn__input')) {
       switchTabs(evt);
+    }
+  }
+
+  function initHandlerds() {
+    cardNumber.addEventListener('change', onCardNumberInputChange);
+    cardDate.addEventListener('input', onCardDateInput);
+    cardDate.addEventListener('change', onCardDateInputChange);
+    cardCVC.addEventListener('change', onCVCInputChange);
+    cardHolderName.addEventListener('change', onCardHolderNameChange);
+    form.addEventListener('change', onFormValueChange);
+    form.addEventListener('submit', onFormSubmit);
+    document.querySelector('.deliver__store').addEventListener('click', onDeliverStoreInputClick);
+    document.querySelector('#deliver__floor').addEventListener('change', onDeliverFloorInputChange);
+    document.querySelector('.deliver').addEventListener('click', onInputClick);
+    document.querySelector('.payment__inner').addEventListener('click', onInputClick);
+  }
+
+  function sendData(evt) {
+    window.backend.postData(new FormData(evt.currentTarget), onPostDataSuccess, onPostDataError);
+    evt.preventDefault();
+  }
+
+  function onPostDataSuccess() {
+    clearForm(form);
+    window.modals.showSuccessModal();
+  }
+
+  function onPostDataError() {
+    window.modals.showErrorModal();
+  }
+
+  function clearForm(submitedForm) {
+    var inputs = submitedForm.querySelectorAll('input');
+    for (var i = 0; i < inputs.length; i++) {
+      inputs[i].value = '';
     }
   }
 
@@ -68,6 +103,18 @@
     element.classList.remove('visually-hidden');
     elementSibling.classList.add('visually-hidden');
     setInputsDisability(element, elementSibling);
+  }
+
+  function onDeliverStoreInputClick(evt) {
+    matchMap(evt.target);
+  }
+
+  function matchMap(element) {
+    var image = document.querySelector('.deliver__store-map-wrap img');
+    if (typeof element.value !== 'undefined') {
+      image.src = MAP_IMG_PATH + element.value + FILE_EXTENSION;
+      image.alt = document.querySelector('label[for="' + element.name + '-' + element.value + '"]').textContent;
+    }
   }
 
   function setInputsDisability(element, hiddenElement) {
@@ -187,4 +234,4 @@
     return sum % 10 === 0;
   }
 
-})(); 
+})();

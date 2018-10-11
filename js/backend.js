@@ -13,7 +13,7 @@
       if (xhr.status === 200) {
         onLoad(xhr.response);
       } else {
-        onError('Статус ответа: ' + xhr.status + ' ' + xhr.statusText);
+        onError('Код ошибки: ' + xhr.status + ' ' + xhr.statusText);
       }
     });
 

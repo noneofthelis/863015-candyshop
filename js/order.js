@@ -1,7 +1,5 @@
 'use strict';
 
-// order.js — модуль, содержащий логику формы оформления заказа
-
 (function () {
 
   var MAP_IMG_PATH = 'img/map/';

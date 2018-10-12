@@ -12,9 +12,25 @@
   var rangePriceMin = rangeFilter.querySelector('.range__price--min');
   var rangePriceMax = rangeFilter.querySelector('.range__price--max');
 
+  /* var itemKindsList = {
+    'Зефир': 0,
+    'Жевательная резинка': 0,
+    'Мороженое': 0,
+    'Газировка': 0,
+    'Мармелад': 0
+  }; */
+
   initHandlers();
   setRangePrice(rightRangeButton);
   setRangePrice(leftRangeButton);
+
+  /* window.filters = {
+    countItemKinds: countItemKinds
+  };
+
+   function countItemKinds(objects) {
+    // console.log(objects);
+  } */
 
   function initHandlers() {
     leftRangeButton.addEventListener('mousedown', onRangeFilterMouseDown);

@@ -24,9 +24,29 @@
 
   function onGetDataSuccess(data) {
     window.catalog.catalogObjects = updateObjects(data);
+    // var objects = updateObjects(data); // используем локальную переменную
     window.catalog.renderCatalog();
     hideCatalogLoadStatus();
+    window.filters.countItemKinds(window.catalog.catalogObjects);
     window.cart.setOrderFormAbitily();
+
+    // То, что работает. window.cart.testGetObjects(objects);
+
+    /*  Вариант один. Cannot read property 'getElemById' of undefined. cart.js:139
+    window.catalog.getCatalogObjectById = function (id) {
+      console.log(objects[id]);
+    }; */
+
+
+    /* Вариант два. window.catalog.getCatalogObjectById is not a function
+    window.catalogObject = {
+      getElemById: function (id) {
+      console.log(objects[id]);
+    }
+    }; */
+
+    // window.cart.getCatalogObjectById(window.catalog.catalogObjects, 25);
+    // window.cart.updateCatalogObjectAmout(window.catalog.catalogObjects, window.catalog.catalogObjects.amount);
   }
 
   function onGetDataError(data) {
@@ -137,6 +157,7 @@
   }
 
   window.catalog = {
+    //getCatalogObjectById: getCatalogObjectById,
     appendElements: appendElements,
     renderCatalog: renderCatalog,
     setAmountClass: setAmountClass,

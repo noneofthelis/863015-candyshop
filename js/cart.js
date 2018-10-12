@@ -136,8 +136,18 @@
     return fragment;
   }
 
+  // console.log(window.catalog.getCatalogObjectById(25));
+  // console.log(window.catalogObject.getElemById(25));
+
+  /* function testGetObjects(objects) {
+    console.log(objects);
+  }*/
+
   window.cart = {
+    // testGetObjects: testGetObjects,
     addObjectToCart: addObjectToCart,
+    // getCatalogObjectById: getCatalogObjectById,
+    // updateCatalogObjectAmout: updateCatalogObjectAmout,
     renderCart: renderCart,
     setOrderFormAbitily: setOrderFormAbitily
   };

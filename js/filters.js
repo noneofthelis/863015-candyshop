@@ -28,8 +28,11 @@
     countItemKinds: countItemKinds
   };
 
-   function countItemKinds(objects) {
-    // console.log(objects);
+  function countItemKinds(objects) {
+    for (var i = 0; i < objects.length; i++) {
+    console.log(objects[i].kind)
+    }
+    console.log(objects, itemKindsList['Зефир']);
   } */
 
   function initHandlers() {
